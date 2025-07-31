@@ -82,8 +82,14 @@ let playerName = "";
 let nameInput: p5.Element, playButton: p5.Element;
 let gameState = "menu";
 let audioStarted = false;
+let monacoFont: p5.Font;
 
 const sketch = (p: p5) => {
+  p.preload = () => {
+    // Load the Monaco font from the public folder
+    monacoFont = p.loadFont('/Monaco.ttf');
+  };
+
   p.setup = () => {
     const canvas = p.createCanvas(1000, 700);
     canvas.parent("app");
@@ -100,7 +106,8 @@ const sketch = (p: p5) => {
     playButton.mousePressed(startGame);
 
     p.textAlign(p.CENTER);
-    p.textFont("Open Sans");
+    // Use the loaded Monaco font
+    p.textFont(monacoFont);
   };
 
   function startGame() {
@@ -120,7 +127,7 @@ const sketch = (p: p5) => {
     el.style("border", "2px solid #00FF00");
     el.style("color", "#00FF00");
     el.style("padding", "8px");
-    el.style("font-family", "Courier New, monospace");
+    el.style("font-family", "Monaco, monospace");
   }
 
   function styleButton(el: p5.Element) {
@@ -128,7 +135,7 @@ const sketch = (p: p5) => {
     el.style("border", "2px solid #00FF00");
     el.style("color", "#00FF00");
     el.style("padding", "10px 20px");
-    el.style("font-family", "Courier New, monospace");
+    el.style("font-family", "Monaco, monospace");
     el.style("font-size", "16px");
     el.style("cursor", "pointer");
   }
