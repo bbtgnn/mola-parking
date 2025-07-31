@@ -1,15 +1,24 @@
 import "./style.css";
 import p5 from "p5";
-import type { Car, ParkingSpot, Obstacle, Boat, Enemy } from "./types";
+import type { Car, Obstacle, Boat, Enemy } from "./types";
 import { GameStateManager } from "./GameState";
 import { Renderer } from "./Renderer";
 import { AudioManager } from "./AudioManager";
+import { LevelGenerator } from "./LevelGenerator";
+import { MovementManager } from "./MovementManager";
+import { config } from "./config";
 
 // Game state manager
 const gameState = new GameStateManager();
 
 // Audio manager
 const audioManager = new AudioManager();
+
+// Level generator
+let levelGenerator: LevelGenerator;
+
+// Movement manager
+let movementManager: MovementManager;
 
 // UI elements
 let nameInput: p5.Element, playButton: p5.Element;
@@ -26,19 +35,44 @@ const sketch = (p: p5) => {
     const canvas = p.createCanvas(1000, 700);
     canvas.parent("app");
 
-    // Initialize renderer
+    // Initialize renderer, level generator, and movement manager
     renderer = new Renderer(p, gameState);
+    levelGenerator = new LevelGenerator(p, gameState);
+    movementManager = new MovementManager(p, gameState, audioManager);
 
-    nameInput = p.createInput("");
-    nameInput.position(p.width / 2 - 100, p.height / 2 + 50);
-    nameInput.size(200);
-    nameInput.attribute("placeholder", "Nome Pilota");
-    styleInput(nameInput);
+    // Development mode: skip setup screen
+    if (config.development && config.skip_home_if_dev) {
+      // Auto-start with default player name
+      gameState.setPlayerName("Developer");
+      gameState.setGameState("playing");
 
-    playButton = p.createButton("START");
-    playButton.position(p.width / 2 - 60, p.height / 2 + 100);
-    styleButton(playButton);
-    playButton.mousePressed(startGame);
+      // Initialize audio
+      audioManager.initializeAudio();
+      audioManager.playMusic();
+
+      // Start the specified level or level 1
+      const startLevel = config.auto_start_level || 1;
+      gameState.level = startLevel;
+      levelGenerator.resetCar();
+      levelGenerator.generateLevel(startLevel);
+
+      console.log(
+        "🚀 Development mode: Skipped setup screen, starting level",
+        startLevel
+      );
+    } else {
+      // Normal setup for production
+      nameInput = p.createInput("");
+      nameInput.position(p.width / 2 - 100, p.height / 2 + 50);
+      nameInput.size(200);
+      nameInput.attribute("placeholder", "Nome Pilota");
+      styleInput(nameInput);
+
+      playButton = p.createButton("START");
+      playButton.position(p.width / 2 - 60, p.height / 2 + 100);
+      styleButton(playButton);
+      playButton.mousePressed(startGame);
+    }
 
     p.textAlign(p.CENTER);
     // Use the loaded Monaco font
@@ -82,30 +116,8 @@ const sketch = (p: p5) => {
   }
 
   function startLevel(lvl: number) {
-    gameState.car = { x: 120, y: 550, w: 48, h: 24, speed: 2.5, angle: 0 };
-    gameState.parkingSpot = generateParkingSpot(lvl);
-    gameState.resetLevel();
-
-    generateFakeParkingSpots(lvl);
-
-    for (let i = 0; i < 8 + lvl; i++) {
-      gameState.obstacles.push(generateObstacle(i));
-    }
-
-    for (let i = 0; i < 3; i++) {
-      gameState.boats.push(generateBoat());
-    }
-
-    for (let i = 0; i < 2; i++) {
-      gameState.enemies.push({
-        x: -150 * (i + 1),
-        y: 150 + i * 200,
-        w: 48,
-        h: 24,
-        speed: 1.2 + lvl * 0.1,
-        col: p.color(255, 50, 50),
-      });
-    }
+    levelGenerator.resetCar();
+    levelGenerator.generateLevel(lvl);
   }
 
   p.draw = () => {
@@ -125,9 +137,7 @@ const sketch = (p: p5) => {
     renderer.drawCar();
 
     if (!gameState.gameOver && !gameState.win && gameState.level <= 10) {
-      moveCar();
-      moveEnemies();
-      moveBoats();
+      movementManager.updateAllMovement();
       checkCollisions();
       checkParking();
     }
@@ -135,137 +145,6 @@ const sketch = (p: p5) => {
     renderer.drawUI();
     renderer.drawMessages();
   };
-
-  function generateParkingSpot(lvl: number): ParkingSpot {
-    let spots = [
-      { x: 850, y: 150 },
-      { x: 850, y: 250 },
-      { x: 850, y: 350 },
-      { x: 750, y: 120 },
-      { x: 750, y: 220 },
-      { x: 750, y: 320 },
-      { x: 650, y: 150 },
-      { x: 650, y: 350 },
-      { x: 550, y: 200 },
-    ];
-    let i = p.min(lvl - 1, spots.length - 1);
-    return { x: spots[i].x, y: spots[i].y, w: 60, h: 30 };
-  }
-
-  function generateFakeParkingSpots(lvl: number) {
-    let spots = [
-      { x: 200, y: 200, angle: 0.785 },
-      { x: 240, y: 170, angle: 0.785 },
-      { x: 280, y: 140, angle: 0.785 },
-      { x: 200, y: 300, angle: -0.785 },
-      { x: 240, y: 330, angle: -0.785 },
-      { x: 280, y: 360, angle: -0.785 },
-      { x: 700, y: 200, angle: -0.785 },
-      { x: 740, y: 170, angle: -0.785 },
-      { x: 780, y: 140, angle: -0.785 },
-    ];
-
-    for (let i = 0; i < p.min(lvl + 2, spots.length); i++) {
-      gameState.fakeParkingSpots.push({
-        x: spots[i].x,
-        y: spots[i].y,
-        w: 50,
-        h: 25,
-        angle: spots[i].angle,
-      });
-    }
-  }
-
-  function generateObstacle(index: number): Obstacle {
-    let w = p.random(40, 60);
-    let h = p.random(20, 35);
-    let x = p.random(200, 800);
-    let y = p.random(150, 500);
-    let colors = [
-      p.color(255, 0, 255),
-      p.color(0, 255, 255),
-      p.color(255, 255, 0),
-      p.color(255, 100, 255),
-      p.color(100, 255, 255),
-    ];
-
-    return {
-      x,
-      y,
-      w,
-      h,
-      col: p.random(colors),
-      type: index % 6 === 0 ? "palm" : index % 4 === 0 ? "lamp" : "car",
-    };
-  }
-
-  function generateBoat(): Boat {
-    return {
-      x: p.random(-300, -50),
-      y: p.random(50, 150),
-      w: 60,
-      h: 25,
-      speed: p.random(0.8, 2.0),
-      col: p.color(0, p.random(150, 255), 255),
-      wave: p.random(0, p.TWO_PI),
-    };
-  }
-
-  function moveCar() {
-    if (!gameState.car) return;
-    let moving = false;
-
-    if (p.keyIsDown(p.LEFT_ARROW)) {
-      gameState.car.angle -= 0.06;
-      moving = true;
-    }
-    if (p.keyIsDown(p.RIGHT_ARROW)) {
-      gameState.car.angle += 0.06;
-      moving = true;
-    }
-    if (p.keyIsDown(p.UP_ARROW)) {
-      gameState.car.x += p.cos(gameState.car.angle) * gameState.car.speed;
-      gameState.car.y += p.sin(gameState.car.angle) * gameState.car.speed;
-      moving = true;
-    }
-    if (p.keyIsDown(p.DOWN_ARROW)) {
-      gameState.car.x -= p.cos(gameState.car.angle) * gameState.car.speed * 0.6;
-      gameState.car.y -= p.sin(gameState.car.angle) * gameState.car.speed * 0.6;
-      moving = true;
-    }
-
-    gameState.car.x = p.constrain(
-      gameState.car.x,
-      gameState.car.w / 2,
-      p.width - gameState.car.w / 2
-    );
-    gameState.car.y = p.constrain(
-      gameState.car.y,
-      gameState.car.h / 2,
-      p.height - 20
-    );
-
-    // Play motor sound based on movement
-    audioManager.playMotorSound(moving);
-  }
-
-  function moveEnemies() {
-    for (let e of gameState.enemies) {
-      e.x += e.speed;
-      if (e.x > p.width + 100) e.x = -150;
-    }
-  }
-
-  function moveBoats() {
-    for (let boat of gameState.boats) {
-      boat.x += boat.speed;
-      boat.wave += 0.02;
-      if (boat.x > p.width + 100) {
-        boat.x = -p.random(100, 200);
-        boat.y = p.random(50, 150);
-      }
-    }
-  }
 
   function checkCollisions() {
     if (!gameState.car || !gameState.parkingSpot) return;

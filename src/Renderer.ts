@@ -1,6 +1,7 @@
 import type p5 from "p5";
 import type { Obstacle, Enemy } from "./types";
 import { GameStateManager } from "./GameState";
+import { config } from "./config";
 
 export class Renderer {
   private p: p5;
@@ -250,6 +251,14 @@ export class Renderer {
     this.p.textAlign(this.p.LEFT);
     this.p.text("LIVELLO: " + this.gameState.level, 20, 25);
     this.p.text("PLAYER: " + this.gameState.playerName, 20, 45);
+
+    // Development mode indicator
+    if (config.development) {
+      this.p.fill(255, 0, 0);
+      this.p.textSize(12);
+      this.p.text("DEV MODE", 20, 55);
+    }
+
     this.p.textAlign(this.p.RIGHT);
     this.p.text("MOLA ARCADE", this.p.width - 20, 25);
   }
