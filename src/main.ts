@@ -3,27 +3,16 @@ import p5 from "p5";
 import type { Car, ParkingSpot, Obstacle, Boat, Enemy } from "./types";
 import { GameStateManager } from "./GameState";
 import { Renderer } from "./Renderer";
+import { AudioManager } from "./AudioManager";
 
 // Game state manager
 const gameState = new GameStateManager();
 
-// Audio variables (will be refactored later)
-let audioContext: AudioContext;
-let motorGain: GainNode,
-  hornGain: GainNode,
-  winGain: GainNode,
-  enemyGain: GainNode,
-  musicGain: GainNode;
-let motorOsc: OscillatorNode,
-  hornOsc: OscillatorNode,
-  winOsc: OscillatorNode,
-  enemyOsc: OscillatorNode,
-  musicOsc: OscillatorNode,
-  bassOsc: OscillatorNode;
+// Audio manager
+const audioManager = new AudioManager();
 
 // UI elements
 let nameInput: p5.Element, playButton: p5.Element;
-let audioStarted = false;
 let monacoFont: p5.Font;
 let renderer: Renderer;
 
@@ -57,14 +46,20 @@ const sketch = (p: p5) => {
   };
 
   function startGame() {
-    if (!audioStarted) {
-      audioStarted = true;
-      initAudio();
+    if ((nameInput as any).value() === "") {
+      alert("Inserisci il tuo nome!");
+      return;
     }
-    gameState.setPlayerName((nameInput as any).value() || "Player");
-    nameInput.hide();
-    playButton.hide();
+
+    gameState.setPlayerName((nameInput as any).value());
     gameState.setGameState("playing");
+    nameInput.remove();
+    playButton.remove();
+
+    // Initialize audio
+    audioManager.initializeAudio();
+    audioManager.playMusic();
+
     startLevel(gameState.level);
   }
 
@@ -84,69 +79,6 @@ const sketch = (p: p5) => {
     el.style("font-family", "Monaco, monospace");
     el.style("font-size", "16px");
     el.style("cursor", "pointer");
-  }
-
-  function initAudio() {
-    try {
-      audioContext = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
-
-      motorOsc = audioContext.createOscillator();
-      motorGain = audioContext.createGain();
-      motorOsc.type = "sine";
-      motorOsc.frequency.setValueAtTime(100, audioContext.currentTime);
-      motorOsc.connect(motorGain);
-      motorGain.connect(audioContext.destination);
-      motorGain.gain.setValueAtTime(0, audioContext.currentTime);
-      motorOsc.start();
-
-      hornOsc = audioContext.createOscillator();
-      hornGain = audioContext.createGain();
-      hornOsc.type = "square";
-      hornOsc.frequency.setValueAtTime(600, audioContext.currentTime);
-      hornOsc.connect(hornGain);
-      hornGain.connect(audioContext.destination);
-      hornGain.gain.setValueAtTime(0, audioContext.currentTime);
-      hornOsc.start();
-
-      winOsc = audioContext.createOscillator();
-      winGain = audioContext.createGain();
-      winOsc.type = "triangle";
-      winOsc.frequency.setValueAtTime(800, audioContext.currentTime);
-      winOsc.connect(winGain);
-      winGain.connect(audioContext.destination);
-      winGain.gain.setValueAtTime(0, audioContext.currentTime);
-      winOsc.start();
-
-      enemyOsc = audioContext.createOscillator();
-      enemyGain = audioContext.createGain();
-      enemyOsc.type = "sawtooth";
-      enemyOsc.frequency.setValueAtTime(300, audioContext.currentTime);
-      enemyOsc.connect(enemyGain);
-      enemyGain.connect(audioContext.destination);
-      enemyGain.gain.setValueAtTime(0, audioContext.currentTime);
-      enemyOsc.start();
-
-      musicOsc = audioContext.createOscillator();
-      musicGain = audioContext.createGain();
-      musicOsc.type = "square";
-      musicOsc.frequency.setValueAtTime(440, audioContext.currentTime);
-      musicOsc.connect(musicGain);
-      musicGain.connect(audioContext.destination);
-      musicGain.gain.setValueAtTime(0.05, audioContext.currentTime);
-      musicOsc.start();
-
-      bassOsc = audioContext.createOscillator();
-      bassOsc.type = "sine";
-      bassOsc.frequency.setValueAtTime(110, audioContext.currentTime);
-      bassOsc.connect(musicGain);
-      bassOsc.start();
-
-      playBackgroundMusic();
-      console.log("Audio inizializzato correttamente");
-    } catch (e) {
-      console.log("Errore audio:", e);
-    }
   }
 
   function startLevel(lvl: number) {
@@ -313,13 +245,8 @@ const sketch = (p: p5) => {
       p.height - 20
     );
 
-    if (audioStarted && motorGain && audioContext) {
-      motorGain.gain.setTargetAtTime(
-        moving ? 0.1 : 0,
-        audioContext.currentTime,
-        0.1
-      );
-    }
+    // Play motor sound based on movement
+    audioManager.playMotorSound(moving);
   }
 
   function moveEnemies() {
@@ -405,33 +332,15 @@ const sketch = (p: p5) => {
   }
 
   function playHorn() {
-    if (audioStarted && hornGain) {
-      hornGain.gain.setTargetAtTime(0.2, audioContext.currentTime, 0.05);
-      setTimeout(
-        () => hornGain.gain.setTargetAtTime(0, audioContext.currentTime, 0.1),
-        200
-      );
-    }
+    audioManager.playHorn();
   }
 
   function playWinTone() {
-    if (audioStarted && winGain) {
-      winGain.gain.setTargetAtTime(0.2, audioContext.currentTime, 0.05);
-      setTimeout(
-        () => winGain.gain.setTargetAtTime(0, audioContext.currentTime, 0.1),
-        300
-      );
-    }
+    audioManager.playWinSound();
   }
 
   function playEnemySiren() {
-    if (audioStarted && enemyGain) {
-      enemyGain.gain.setTargetAtTime(0.2, audioContext.currentTime, 0.05);
-      setTimeout(
-        () => enemyGain.gain.setTargetAtTime(0, audioContext.currentTime, 0.1),
-        300
-      );
-    }
+    audioManager.playEnemySiren();
   }
 
   p.keyPressed = () => {
@@ -447,42 +356,6 @@ const sketch = (p: p5) => {
       startLevel(gameState.level);
     }
   };
-
-  function playBackgroundMusic() {
-    console.log(audioStarted);
-    console.log(musicOsc);
-    console.log(bassOsc);
-    console.log(audioContext);
-
-    if (!audioStarted || !musicOsc || !bassOsc || !audioContext) return;
-
-    const melody = [
-      440, 523, 659, 523, 440, 392, 440, 523, 659, 784, 659, 523, 440, 523, 440,
-      392,
-    ];
-    const bassPattern = [110, 110, 146, 146, 110, 110, 146, 146];
-
-    let noteIndex = 0;
-    let bassIndex = 0;
-
-    function playNextNote() {
-      console.log("suono prossima nota");
-      if (audioStarted && musicOsc && bassOsc && audioContext) {
-        musicOsc.frequency.setValueAtTime(
-          melody[noteIndex],
-          audioContext.currentTime
-        );
-        bassOsc.frequency.setValueAtTime(
-          bassPattern[bassIndex],
-          audioContext.currentTime
-        );
-        noteIndex = (noteIndex + 1) % melody.length;
-        bassIndex = (bassIndex + 1) % bassPattern.length;
-      }
-    }
-
-    setInterval(playNextNote, 400);
-  }
 };
 
 // Initialize p5.js
