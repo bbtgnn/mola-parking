@@ -6,6 +6,8 @@ import { AudioManager } from "./AudioManager";
 import { LevelGenerator } from "./LevelGenerator";
 import { MovementManager } from "./MovementManager";
 import { CollisionManager } from "./CollisionManager";
+import { InputManager } from "./InputManager";
+import { GameLogicManager } from "./GameLogicManager";
 import { config } from "./config";
 
 // Game state manager
@@ -23,6 +25,12 @@ let movementManager: MovementManager;
 // Collision manager
 let collisionManager: CollisionManager;
 
+// Input manager
+let inputManager: InputManager;
+
+// Game logic manager
+let gameLogic: GameLogicManager;
+
 // UI elements
 let nameInput: p5.Element, playButton: p5.Element;
 let monacoFont: p5.Font;
@@ -38,34 +46,28 @@ const sketch = (p: p5) => {
     const canvas = p.createCanvas(1000, 700);
     canvas.parent("app");
 
-    // Initialize renderer, level generator, movement manager, and collision manager
+    // Initialize all managers
     renderer = new Renderer(p, gameState);
     levelGenerator = new LevelGenerator(p, gameState);
     movementManager = new MovementManager(p, gameState, audioManager);
     collisionManager = new CollisionManager(p, gameState, audioManager);
+    inputManager = new InputManager(p, gameState, levelGenerator);
+    gameLogic = new GameLogicManager(
+      p,
+      gameState,
+      renderer,
+      audioManager,
+      levelGenerator,
+      movementManager,
+      collisionManager,
+      inputManager
+    );
 
-    // Development mode: skip setup screen
-    if (config.development && config.skip_home_if_dev) {
-      // Auto-start with default player name
-      gameState.setPlayerName("Developer");
-      gameState.setGameState("playing");
+    // Setup game logic
+    gameLogic.setupGame();
 
-      // Initialize audio
-      audioManager.initializeAudio();
-      audioManager.playMusic();
-
-      // Start the specified level or level 1
-      const startLevel = config.auto_start_level || 1;
-      gameState.level = startLevel;
-      levelGenerator.resetCar();
-      levelGenerator.generateLevel(startLevel);
-
-      console.log(
-        "🚀 Development mode: Skipped setup screen, starting level",
-        startLevel
-      );
-    } else {
-      // Normal setup for production
+    // Setup UI for production mode
+    if (!config.development || !config.skip_home_if_dev) {
       nameInput = p.createInput("");
       nameInput.position(p.width / 2 - 100, p.height / 2 + 50);
       nameInput.size(200);
@@ -75,31 +77,15 @@ const sketch = (p: p5) => {
       playButton = p.createButton("START");
       playButton.position(p.width / 2 - 60, p.height / 2 + 100);
       styleButton(playButton);
-      playButton.mousePressed(startGame);
+      playButton.mousePressed(() =>
+        gameLogic.startGame((nameInput as any).value())
+      );
     }
 
     p.textAlign(p.CENTER);
     // Use the loaded Monaco font
     p.textFont(monacoFont);
   };
-
-  function startGame() {
-    if ((nameInput as any).value() === "") {
-      alert("Inserisci il tuo nome!");
-      return;
-    }
-
-    gameState.setPlayerName((nameInput as any).value());
-    gameState.setGameState("playing");
-    nameInput.remove();
-    playButton.remove();
-
-    // Initialize audio
-    audioManager.initializeAudio();
-    audioManager.playMusic();
-
-    startLevel(gameState.level);
-  }
 
   function styleInput(el: p5.Element) {
     el.style("background", "#111");
@@ -119,49 +105,9 @@ const sketch = (p: p5) => {
     el.style("cursor", "pointer");
   }
 
-  function startLevel(lvl: number) {
-    levelGenerator.resetCar();
-    levelGenerator.generateLevel(lvl);
-  }
-
   p.draw = () => {
-    p.background(0);
-
-    if (gameState.isInMenu()) {
-      renderer.drawMenu();
-      return;
-    }
-
-    renderer.drawCastle();
-    renderer.drawFakeParkingSpots();
-    renderer.drawParkingSpot();
-    renderer.drawObstacles();
-    renderer.drawEnemies();
-    renderer.drawBoats();
-    renderer.drawCar();
-
-    if (collisionManager.isGameActive()) {
-      movementManager.updateAllMovement();
-      collisionManager.checkAllCollisions();
-      collisionManager.checkParking();
-    }
-
-    renderer.drawUI();
-    renderer.drawMessages();
-  };
-
-  p.keyPressed = () => {
-    if ((p.key === "r" || p.key === "R") && gameState.gameOver) {
-      startLevel(gameState.level);
-    }
-    if (
-      (p.key === "n" || p.key === "N") &&
-      gameState.win &&
-      gameState.level < 11
-    ) {
-      gameState.nextLevel();
-      startLevel(gameState.level);
-    }
+    gameLogic.update();
+    gameLogic.render();
   };
 };
 
