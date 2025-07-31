@@ -259,8 +259,27 @@ export class Renderer {
       this.p.text("DEV MODE", 20, 55);
     }
 
+    // BPM indicator
+    this.p.fill(0, 255, 255);
+    this.p.textSize(14);
+    this.p.textAlign(this.p.CENTER);
+    this.p.text("BPM: " + this.calculateBPM(), this.p.width / 2, 25);
+
     this.p.textAlign(this.p.RIGHT);
     this.p.text("MOLA ARCADE", this.p.width - 20, 25);
+  }
+
+  private calculateBPM(): number {
+    // Linear interpolation from 60 BPM (level 1) to 210 BPM (level 10)
+    const minBPM = 60;
+    const maxBPM = 210;
+    const minLevel = 1;
+    const maxLevel = 10;
+
+    const level = Math.min(Math.max(this.gameState.level, minLevel), maxLevel);
+    const progress = (level - minLevel) / (maxLevel - minLevel);
+
+    return Math.round(minBPM + (maxBPM - minBPM) * progress);
   }
 
   public drawMessages(): void {

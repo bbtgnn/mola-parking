@@ -43,7 +43,8 @@ export class Game {
     this.inputManager = new InputManager(
       p,
       this.gameState,
-      this.levelGenerator
+      this.levelGenerator,
+      this.audioManager
     );
     this.gameLogic = new GameLogicManager(
       p,
@@ -58,17 +59,17 @@ export class Game {
     this.uiManager = new UIManager(p);
   }
 
-  public setup(): void {
+  public async setup(): Promise<void> {
     // Create canvas
     const canvas = this.p.createCanvas(1000, 700);
     canvas.parent("app");
 
     // Setup game logic
-    this.gameLogic.setupGame();
+    await this.gameLogic.setupGame();
 
     // Setup UI for production mode
-    this.uiManager.createProductionUI((playerName: string) => {
-      this.gameLogic.startGame(playerName);
+    this.uiManager.createProductionUI(async (playerName: string) => {
+      await this.gameLogic.startGame(playerName);
       this.uiManager.removeUI();
     });
 

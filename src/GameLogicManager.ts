@@ -17,6 +17,7 @@ export class GameLogicManager {
   private movementManager: MovementManager;
   private collisionManager: CollisionManager;
   private inputManager: InputManager;
+  private setupComplete: boolean = false;
 
   constructor(
     p: p5,
@@ -38,23 +39,28 @@ export class GameLogicManager {
     this.inputManager = inputManager;
   }
 
-  public setupGame(): void {
+  public async setupGame(): Promise<void> {
     // Setup input handlers
     this.inputManager.setupKeyHandlers();
 
     // Development mode: skip setup screen
     if (config.development && config.skip_home_if_dev) {
-      this.startGameInDevMode();
+      await this.startGameInDevMode();
+    } else {
+      // Ensure game state is set to menu for production mode
+      this.gameState.setGameState("menu");
     }
+
+    this.setupComplete = true;
   }
 
-  private startGameInDevMode(): void {
+  private async startGameInDevMode(): Promise<void> {
     // Auto-start with default player name
     this.gameState.setPlayerName("Developer");
     this.gameState.setGameState("playing");
 
     // Initialize audio
-    this.audioManager.initializeAudio();
+    await this.audioManager.initializeAudio();
     this.audioManager.playMusic();
 
     // Start the specified level or level 1
@@ -62,14 +68,9 @@ export class GameLogicManager {
     this.gameState.level = startLevel;
     this.levelGenerator.resetCar();
     this.levelGenerator.generateLevel(startLevel);
-
-    console.log(
-      "🚀 Development mode: Skipped setup screen, starting level",
-      startLevel
-    );
   }
 
-  public startGame(playerName: string): void {
+  public async startGame(playerName: string): Promise<void> {
     if (playerName === "") {
       alert("Inserisci il tuo nome!");
       return;
@@ -79,7 +80,7 @@ export class GameLogicManager {
     this.gameState.setGameState("playing");
 
     // Initialize audio
-    this.audioManager.initializeAudio();
+    await this.audioManager.initializeAudio();
     this.audioManager.playMusic();
 
     this.startLevel(this.gameState.level);
@@ -88,6 +89,9 @@ export class GameLogicManager {
   public startLevel(level: number): void {
     this.levelGenerator.resetCar();
     this.levelGenerator.generateLevel(level);
+
+    // Update audio BPM for the new level
+    this.audioManager.setLevel(level);
   }
 
   public update(): void {
@@ -101,6 +105,15 @@ export class GameLogicManager {
 
   public render(): void {
     this.p.background(0);
+
+    // Don't render until setup is complete
+    if (!this.setupComplete) {
+      this.p.fill(255);
+      this.p.textAlign(this.p.CENTER, this.p.CENTER);
+      this.p.textSize(24);
+      this.p.text("Loading...", this.p.width / 2, this.p.height / 2);
+      return;
+    }
 
     if (this.gameState.isInMenu()) {
       this.renderer.drawMenu();

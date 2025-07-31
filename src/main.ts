@@ -10,11 +10,11 @@ const sketch = (p: p5) => {
     // Game will handle preload internally
   };
 
-  p.setup = () => {
+  p.setup = async () => {
     // Initialize the main game
     game = new Game(p);
     game.preload();
-    game.setup();
+    await game.setup();
   };
 
   p.draw = () => {

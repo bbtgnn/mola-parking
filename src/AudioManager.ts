@@ -12,13 +12,52 @@ export class AudioManager {
   private musicOsc: OscillatorNode | null = null;
   private bassOsc: OscillatorNode | null = null;
   private audioStarted = false;
+  private currentLevel: number = 1;
+  private musicInterval: number | null = null;
 
-  public initializeAudio(): void {
+  constructor() {
+    // Initialize with level 1
+    this.currentLevel = 1;
+  }
+
+  public setLevel(level: number): void {
+    this.currentLevel = level;
+    // Restart music with new BPM if already playing
+    if (this.audioStarted && this.musicInterval) {
+      this.stopMusic();
+      this.playMusic();
+    }
+  }
+
+  private calculateBPM(): number {
+    // Linear interpolation from 60 BPM (level 1) to 210 BPM (level 10)
+    const minBPM = 60;
+    const maxBPM = 210;
+    const minLevel = 1;
+    const maxLevel = 10;
+
+    const level = Math.min(Math.max(this.currentLevel, minLevel), maxLevel);
+    const progress = (level - minLevel) / (maxLevel - minLevel);
+
+    return Math.round(minBPM + (maxBPM - minBPM) * progress);
+  }
+
+  private getBeatDuration(): number {
+    const bpm = this.calculateBPM();
+    return 60 / bpm; // Convert BPM to seconds per beat
+  }
+
+  public async initializeAudio(): Promise<void> {
     if (this.audioStarted) return;
 
     try {
       this.audioContext = new (window.AudioContext ||
         (window as any).webkitAudioContext)();
+
+      // Resume audio context if it's suspended (required for autoplay policies)
+      if (this.audioContext.state === "suspended") {
+        await this.audioContext.resume();
+      }
 
       // Create gain nodes
       this.motorGain = this.audioContext.createGain();
@@ -178,6 +217,9 @@ export class AudioManager {
     )
       return;
 
+    // Stop existing music if playing
+    this.stopMusic();
+
     // Original melody pattern
     const melody = [
       440, 523, 659, 523, 440, 392, 440, 523, 659, 784, 659, 523, 440, 523, 440,
@@ -208,10 +250,23 @@ export class AudioManager {
       }
     };
 
-    setInterval(playNextNote, 400);
+    // Calculate interval based on current BPM
+    const beatDuration = this.getBeatDuration();
+    const intervalMs = beatDuration * 1000; // Convert to milliseconds
+
+    this.musicInterval = setInterval(playNextNote, intervalMs);
+  }
+
+  public stopMusic(): void {
+    if (this.musicInterval) {
+      clearInterval(this.musicInterval);
+      this.musicInterval = null;
+    }
   }
 
   public stopAllAudio(): void {
+    this.stopMusic();
+
     if (!this.audioContext) return;
 
     try {
@@ -224,5 +279,29 @@ export class AudioManager {
 
   public isAudioStarted(): boolean {
     return this.audioStarted;
+  }
+
+  public getCurrentBPM(): number {
+    return this.calculateBPM();
+  }
+
+  public testAudio(): void {
+    if (!this.audioStarted || !this.audioContext) {
+      console.warn("Audio not initialized");
+      return;
+    }
+
+    // Test motor sound
+    if (this.motorGain) {
+      this.motorGain.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+      setTimeout(() => {
+        if (this.motorGain) {
+          this.motorGain.gain.setValueAtTime(0, this.audioContext!.currentTime);
+        }
+      }, 500);
+    }
+
+    // Test horn sound
+    this.playHorn();
   }
 }
