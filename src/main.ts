@@ -1,11 +1,11 @@
 import "./style.css";
 import p5 from "p5";
-import type { Car, Obstacle, Boat, Enemy } from "./types";
 import { GameStateManager } from "./GameState";
 import { Renderer } from "./Renderer";
 import { AudioManager } from "./AudioManager";
 import { LevelGenerator } from "./LevelGenerator";
 import { MovementManager } from "./MovementManager";
+import { CollisionManager } from "./CollisionManager";
 import { config } from "./config";
 
 // Game state manager
@@ -19,6 +19,9 @@ let levelGenerator: LevelGenerator;
 
 // Movement manager
 let movementManager: MovementManager;
+
+// Collision manager
+let collisionManager: CollisionManager;
 
 // UI elements
 let nameInput: p5.Element, playButton: p5.Element;
@@ -35,10 +38,11 @@ const sketch = (p: p5) => {
     const canvas = p.createCanvas(1000, 700);
     canvas.parent("app");
 
-    // Initialize renderer, level generator, and movement manager
+    // Initialize renderer, level generator, movement manager, and collision manager
     renderer = new Renderer(p, gameState);
     levelGenerator = new LevelGenerator(p, gameState);
     movementManager = new MovementManager(p, gameState, audioManager);
+    collisionManager = new CollisionManager(p, gameState, audioManager);
 
     // Development mode: skip setup screen
     if (config.development && config.skip_home_if_dev) {
@@ -136,91 +140,15 @@ const sketch = (p: p5) => {
     renderer.drawBoats();
     renderer.drawCar();
 
-    if (!gameState.gameOver && !gameState.win && gameState.level <= 10) {
+    if (collisionManager.isGameActive()) {
       movementManager.updateAllMovement();
-      checkCollisions();
-      checkParking();
+      collisionManager.checkAllCollisions();
+      collisionManager.checkParking();
     }
 
     renderer.drawUI();
     renderer.drawMessages();
   };
-
-  function checkCollisions() {
-    if (!gameState.car || !gameState.parkingSpot) return;
-
-    for (let o of gameState.obstacles) {
-      if (checkCollision(gameState.car, o)) {
-        if (!gameState.gameOver) playHorn();
-        gameState.gameOver = true;
-      }
-    }
-
-    for (let e of gameState.enemies) {
-      if (checkCollision(gameState.car, e)) {
-        if (!gameState.gameOver) playHorn();
-        gameState.gameOver = true;
-      }
-      if (
-        p.abs(e.x - gameState.parkingSpot.x) < 20 &&
-        p.abs(e.y - gameState.parkingSpot.y) < 20
-      ) {
-        if (!gameState.gameOver) playEnemySiren();
-        gameState.gameOver = true;
-      }
-    }
-
-    for (let b of gameState.boats) {
-      if (checkCollision(gameState.car, b)) {
-        if (!gameState.gameOver) playHorn();
-        gameState.gameOver = true;
-      }
-    }
-
-    for (let fake of gameState.fakeParkingSpots) {
-      if (
-        p.abs(gameState.car.x - fake.x) < 25 &&
-        p.abs(gameState.car.y - fake.y) < 20
-      ) {
-        if (!gameState.gameOver) playHorn();
-        gameState.gameOver = true;
-      }
-    }
-  }
-
-  function checkCollision(
-    obj1: Car | Obstacle | Enemy | Boat,
-    obj2: Car | Obstacle | Enemy | Boat
-  ): boolean {
-    let dx = p.abs(obj1.x - obj2.x);
-    let dy = p.abs(obj1.y - obj2.y);
-    let xLimit = obj1.w / 2 + obj2.w / 2;
-    let yLimit = obj1.h / 2 + obj2.h / 2;
-    return dx < xLimit && dy < yLimit;
-  }
-
-  function checkParking() {
-    if (!gameState.car || !gameState.parkingSpot) return;
-    let dx = p.abs(gameState.car.x - gameState.parkingSpot.x);
-    let dy = p.abs(gameState.car.y - gameState.parkingSpot.y);
-    let dAngle = p.abs(gameState.car.angle % (2 * p.PI));
-    if (dx < 18 && dy < 18 && dAngle < 0.4) {
-      if (!gameState.win) playWinTone();
-      gameState.win = true;
-    }
-  }
-
-  function playHorn() {
-    audioManager.playHorn();
-  }
-
-  function playWinTone() {
-    audioManager.playWinSound();
-  }
-
-  function playEnemySiren() {
-    audioManager.playEnemySiren();
-  }
 
   p.keyPressed = () => {
     if ((p.key === "r" || p.key === "R") && gameState.gameOver) {
