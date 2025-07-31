@@ -1,22 +1,85 @@
 import "./style.css";
 import p5 from "p5";
 
-let car;
-let parkingSpot;
-let obstacles = [];
-let boats = [];
-let enemies = [];
-let fakeParkingSpots = [];
+// Type definitions
+interface Car {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  speed: number;
+  angle: number;
+}
+
+interface ParkingSpot {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+interface Obstacle {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  col: p5.Color;
+  type: "palm" | "lamp" | "car";
+}
+
+interface Boat {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  speed: number;
+  col: p5.Color;
+  wave: number;
+}
+
+interface Enemy {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  speed: number;
+  col: p5.Color;
+}
+
+interface FakeParkingSpot {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  angle: number;
+}
+
+// Global variables with proper typing
+let car: Car;
+let parkingSpot: ParkingSpot;
+let obstacles: Obstacle[] = [];
+let boats: Boat[] = [];
+let enemies: Enemy[] = [];
+let fakeParkingSpots: FakeParkingSpot[] = [];
 let level = 1;
 let gameOver = false;
 let win = false;
 
-let audioContext;
-let motorGain, hornGain, winGain, enemyGain, musicGain;
-let motorOsc, hornOsc, winOsc, enemyOsc, musicOsc, bassOsc;
+let audioContext: AudioContext;
+let motorGain: GainNode,
+  hornGain: GainNode,
+  winGain: GainNode,
+  enemyGain: GainNode,
+  musicGain: GainNode;
+let motorOsc: OscillatorNode,
+  hornOsc: OscillatorNode,
+  winOsc: OscillatorNode,
+  enemyOsc: OscillatorNode,
+  musicOsc: OscillatorNode,
+  bassOsc: OscillatorNode;
 
 let playerName = "";
-let nameInput, playButton;
+let nameInput: p5.Element, playButton: p5.Element;
 let gameState = "menu";
 let audioStarted = false;
 
@@ -45,14 +108,14 @@ const sketch = (p: p5) => {
       audioStarted = true;
       initAudio();
     }
-    playerName = nameInput.value() || "Player";
+    playerName = (nameInput as any).value() || "Player";
     nameInput.hide();
     playButton.hide();
     gameState = "playing";
     startLevel(level);
   }
 
-  function styleInput(el) {
+  function styleInput(el: p5.Element) {
     el.style("background", "#111");
     el.style("border", "2px solid #00FF00");
     el.style("color", "#00FF00");
@@ -60,7 +123,7 @@ const sketch = (p: p5) => {
     el.style("font-family", "Courier New, monospace");
   }
 
-  function styleButton(el) {
+  function styleButton(el: p5.Element) {
     el.style("background", "#000");
     el.style("border", "2px solid #00FF00");
     el.style("color", "#00FF00");
@@ -72,7 +135,8 @@ const sketch = (p: p5) => {
 
   function initAudio() {
     try {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
 
       motorOsc = audioContext.createOscillator();
       motorGain = audioContext.createGain();
@@ -132,7 +196,7 @@ const sketch = (p: p5) => {
     }
   }
 
-  function startLevel(lvl) {
+  function startLevel(lvl: number) {
     car = { x: 120, y: 550, w: 48, h: 24, speed: 2.5, angle: 0 };
     parkingSpot = generateParkingSpot(lvl);
     obstacles = [];
@@ -300,7 +364,7 @@ const sketch = (p: p5) => {
     p.pop();
   }
 
-  function generateParkingSpot(lvl) {
+  function generateParkingSpot(lvl: number): ParkingSpot {
     let spots = [
       { x: 850, y: 150 },
       { x: 850, y: 250 },
@@ -316,7 +380,7 @@ const sketch = (p: p5) => {
     return { x: spots[i].x, y: spots[i].y, w: 60, h: 30 };
   }
 
-  function generateFakeParkingSpots(lvl) {
+  function generateFakeParkingSpots(lvl: number) {
     let spots = [
       { x: 200, y: 200, angle: 0.785 },
       { x: 240, y: 170, angle: 0.785 },
@@ -340,7 +404,7 @@ const sketch = (p: p5) => {
     }
   }
 
-  function generateObstacle(index) {
+  function generateObstacle(index: number): Obstacle {
     let w = p.random(40, 60);
     let h = p.random(20, 35);
     let x = p.random(200, 800);
@@ -363,7 +427,7 @@ const sketch = (p: p5) => {
     };
   }
 
-  function generateBoat() {
+  function generateBoat(): Boat {
     return {
       x: p.random(-300, -50),
       y: p.random(50, 150),
@@ -449,7 +513,7 @@ const sketch = (p: p5) => {
     }
   }
 
-  function drawPalm(x, y) {
+  function drawPalm(x: number, y: number) {
     p.push();
     p.translate(x, y);
     p.noStroke();
@@ -462,7 +526,7 @@ const sketch = (p: p5) => {
     p.pop();
   }
 
-  function drawLamp(x, y) {
+  function drawLamp(x: number, y: number) {
     p.push();
     p.translate(x, y);
     p.noStroke();
@@ -473,7 +537,7 @@ const sketch = (p: p5) => {
     p.pop();
   }
 
-  function drawPixelCar(obj, isEnemy) {
+  function drawPixelCar(obj: Obstacle | Enemy, isEnemy: boolean) {
     p.push();
     p.translate(obj.x, obj.y);
     p.rectMode(p.CENTER);
@@ -647,7 +711,10 @@ const sketch = (p: p5) => {
     }
   }
 
-  function checkCollision(obj1, obj2) {
+  function checkCollision(
+    obj1: Car | Obstacle | Enemy | Boat,
+    obj2: Car | Obstacle | Enemy | Boat
+  ): boolean {
     let dx = p.abs(obj1.x - obj2.x);
     let dy = p.abs(obj1.y - obj2.y);
     let xLimit = obj1.w / 2 + obj2.w / 2;
