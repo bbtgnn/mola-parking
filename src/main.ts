@@ -1,70 +1,12 @@
 import "./style.css";
 import p5 from "p5";
+import type { Car, ParkingSpot, Obstacle, Boat, Enemy } from "./types";
+import { GameStateManager } from "./GameState";
 
-// Type definitions
-interface Car {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  speed: number;
-  angle: number;
-}
+// Game state manager
+const gameState = new GameStateManager();
 
-interface ParkingSpot {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
-interface Obstacle {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  col: p5.Color;
-  type: "palm" | "lamp" | "car";
-}
-
-interface Boat {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  speed: number;
-  col: p5.Color;
-  wave: number;
-}
-
-interface Enemy {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  speed: number;
-  col: p5.Color;
-}
-
-interface FakeParkingSpot {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  angle: number;
-}
-
-// Global variables with proper typing
-let car: Car;
-let parkingSpot: ParkingSpot;
-let obstacles: Obstacle[] = [];
-let boats: Boat[] = [];
-let enemies: Enemy[] = [];
-let fakeParkingSpots: FakeParkingSpot[] = [];
-let level = 1;
-let gameOver = false;
-let win = false;
-
+// Audio variables (will be refactored later)
 let audioContext: AudioContext;
 let motorGain: GainNode,
   hornGain: GainNode,
@@ -78,16 +20,15 @@ let motorOsc: OscillatorNode,
   musicOsc: OscillatorNode,
   bassOsc: OscillatorNode;
 
-let playerName = "";
+// UI elements
 let nameInput: p5.Element, playButton: p5.Element;
-let gameState = "menu";
 let audioStarted = false;
 let monacoFont: p5.Font;
 
 const sketch = (p: p5) => {
   p.preload = () => {
     // Load the Monaco font from the public folder
-    monacoFont = p.loadFont('/Monaco.ttf');
+    monacoFont = p.loadFont("/Monaco.ttf");
   };
 
   p.setup = () => {
@@ -115,11 +56,11 @@ const sketch = (p: p5) => {
       audioStarted = true;
       initAudio();
     }
-    playerName = (nameInput as any).value() || "Player";
+    gameState.setPlayerName((nameInput as any).value() || "Player");
     nameInput.hide();
     playButton.hide();
-    gameState = "playing";
-    startLevel(level);
+    gameState.setGameState("playing");
+    startLevel(gameState.level);
   }
 
   function styleInput(el: p5.Element) {
@@ -204,25 +145,22 @@ const sketch = (p: p5) => {
   }
 
   function startLevel(lvl: number) {
-    car = { x: 120, y: 550, w: 48, h: 24, speed: 2.5, angle: 0 };
-    parkingSpot = generateParkingSpot(lvl);
-    obstacles = [];
-    boats = [];
-    fakeParkingSpots = [];
-    enemies = [];
+    gameState.car = { x: 120, y: 550, w: 48, h: 24, speed: 2.5, angle: 0 };
+    gameState.parkingSpot = generateParkingSpot(lvl);
+    gameState.resetLevel();
 
     generateFakeParkingSpots(lvl);
 
     for (let i = 0; i < 8 + lvl; i++) {
-      obstacles.push(generateObstacle(i));
+      gameState.obstacles.push(generateObstacle(i));
     }
 
     for (let i = 0; i < 3; i++) {
-      boats.push(generateBoat());
+      gameState.boats.push(generateBoat());
     }
 
     for (let i = 0; i < 2; i++) {
-      enemies.push({
+      gameState.enemies.push({
         x: -150 * (i + 1),
         y: 150 + i * 200,
         w: 48,
@@ -231,15 +169,12 @@ const sketch = (p: p5) => {
         col: p.color(255, 50, 50),
       });
     }
-
-    gameOver = false;
-    win = false;
   }
 
   p.draw = () => {
     p.background(0);
 
-    if (gameState === "menu") {
+    if (gameState.isInMenu()) {
       drawMenu();
       return;
     }
@@ -252,7 +187,7 @@ const sketch = (p: p5) => {
     drawBoats();
     drawCar();
 
-    if (!gameOver && !win && level <= 10) {
+    if (!gameState.gameOver && !gameState.win && gameState.level <= 10) {
       moveCar();
       moveEnemies();
       moveBoats();
@@ -401,7 +336,7 @@ const sketch = (p: p5) => {
     ];
 
     for (let i = 0; i < p.min(lvl + 2, spots.length); i++) {
-      fakeParkingSpots.push({
+      gameState.fakeParkingSpots.push({
         x: spots[i].x,
         y: spots[i].y,
         w: 50,
@@ -447,8 +382,8 @@ const sketch = (p: p5) => {
   }
 
   function drawFakeParkingSpots() {
-    for (let i = 0; i < fakeParkingSpots.length; i++) {
-      let spot = fakeParkingSpots[i];
+    for (let i = 0; i < gameState.fakeParkingSpots.length; i++) {
+      let spot = gameState.fakeParkingSpots[i];
       p.push();
       p.translate(spot.x, spot.y);
       p.rotate(spot.angle);
@@ -467,14 +402,15 @@ const sketch = (p: p5) => {
   }
 
   function drawParkingSpot() {
+    if (!gameState.parkingSpot) return;
     p.push();
-    p.translate(parkingSpot.x, parkingSpot.y);
+    p.translate(gameState.parkingSpot.x, gameState.parkingSpot.y);
     p.rectMode(p.CENTER);
     let pulse = p.sin(p.frameCount * 0.1) * 50 + 205;
     p.stroke(255, pulse, 0);
     p.strokeWeight(4);
     p.fill(100, 100, 0);
-    p.rect(0, 0, parkingSpot.w, parkingSpot.h);
+    p.rect(0, 0, gameState.parkingSpot.w, gameState.parkingSpot.h);
     p.noStroke();
     p.fill(255, 255, 0);
     p.textAlign(p.CENTER, p.CENTER);
@@ -484,36 +420,37 @@ const sketch = (p: p5) => {
   }
 
   function drawCar() {
+    if (!gameState.car) return;
     p.push();
-    p.translate(car.x, car.y);
-    p.rotate(car.angle);
+    p.translate(gameState.car.x, gameState.car.y);
+    p.rotate(gameState.car.angle);
     p.rectMode(p.CENTER);
     p.stroke(0, 255, 0);
     p.strokeWeight(2);
     p.fill(255);
-    p.rect(0, 0, car.w, car.h);
+    p.rect(0, 0, gameState.car.w, gameState.car.h);
     p.noStroke();
     p.fill(100, 150, 255);
     p.rect(0, -4, 28, 12);
     p.fill(40);
-    p.rect(-car.w / 2 + 8, -car.h / 2, 8, 6);
-    p.rect(car.w / 2 - 8, -car.h / 2, 8, 6);
-    p.rect(-car.w / 2 + 8, car.h / 2, 8, 6);
-    p.rect(car.w / 2 - 8, car.h / 2, 8, 6);
+    p.rect(-gameState.car.w / 2 + 8, -gameState.car.h / 2, 8, 6);
+    p.rect(gameState.car.w / 2 - 8, -gameState.car.h / 2, 8, 6);
+    p.rect(-gameState.car.w / 2 + 8, gameState.car.h / 2, 8, 6);
+    p.rect(gameState.car.w / 2 - 8, gameState.car.h / 2, 8, 6);
     p.fill(255, 255, 0);
-    p.rect(car.w / 2 + 2, -car.h / 4, 4, 4);
-    p.rect(car.w / 2 + 2, car.h / 4, 4, 4);
+    p.rect(gameState.car.w / 2 + 2, -gameState.car.h / 4, 4, 4);
+    p.rect(gameState.car.w / 2 + 2, gameState.car.h / 4, 4, 4);
     p.pop();
   }
 
   function drawEnemies() {
-    for (let i = 0; i < enemies.length; i++) {
-      drawPixelCar(enemies[i], true);
+    for (let i = 0; i < gameState.enemies.length; i++) {
+      drawPixelCar(gameState.enemies[i], true);
     }
   }
 
   function drawObstacles() {
-    for (let obs of obstacles) {
+    for (let obs of gameState.obstacles) {
       if (obs.type === "palm") drawPalm(obs.x, obs.y);
       else if (obs.type === "lamp") drawLamp(obs.x, obs.y);
       else drawPixelCar(obs, false);
@@ -573,7 +510,7 @@ const sketch = (p: p5) => {
   }
 
   function drawBoats() {
-    for (let boat of boats) {
+    for (let boat of gameState.boats) {
       p.push();
       p.translate(boat.x, boat.y + p.sin(boat.wave + p.frameCount * 0.1) * 3);
       p.stroke(0, 255, 255);
@@ -598,22 +535,22 @@ const sketch = (p: p5) => {
     p.noStroke();
     p.textSize(18);
     p.textAlign(p.LEFT);
-    p.text("LIVELLO: " + level, 20, 25);
-    p.text("PLAYER: " + playerName, 20, 45);
+    p.text("LIVELLO: " + gameState.level, 20, 25);
+    p.text("PLAYER: " + gameState.playerName, 20, 45);
     p.textAlign(p.RIGHT);
     p.text("MOLA ARCADE", p.width - 20, 25);
   }
 
   function drawMessages() {
     p.textAlign(p.CENTER);
-    if (win && level <= 10) {
+    if (gameState.win && gameState.level <= 10) {
       p.fill(0, 255, 0);
       p.stroke(0, 255, 0);
       p.strokeWeight(2);
       p.textSize(24);
       p.text("PARCHEGGIO RIUSCITO! Premi N", p.width / 2, 100);
     }
-    if (level > 10) {
+    if (gameState.isGameComplete()) {
       p.fill(255, 255, 0);
       p.stroke(255, 255, 0);
       p.strokeWeight(2);
@@ -621,9 +558,13 @@ const sketch = (p: p5) => {
       p.text("VITTORIA TOTALE!", p.width / 2, p.height / 2);
       p.noStroke();
       p.textSize(20);
-      p.text("Complimenti " + playerName + "!", p.width / 2, p.height / 2 + 40);
+      p.text(
+        "Complimenti " + gameState.playerName + "!",
+        p.width / 2,
+        p.height / 2 + 40
+      );
     }
-    if (gameOver) {
+    if (gameState.gameOver) {
       p.fill(255, 0, 0);
       p.stroke(255, 0, 0);
       p.strokeWeight(2);
@@ -633,29 +574,38 @@ const sketch = (p: p5) => {
   }
 
   function moveCar() {
+    if (!gameState.car) return;
     let moving = false;
 
     if (p.keyIsDown(p.LEFT_ARROW)) {
-      car.angle -= 0.06;
+      gameState.car.angle -= 0.06;
       moving = true;
     }
     if (p.keyIsDown(p.RIGHT_ARROW)) {
-      car.angle += 0.06;
+      gameState.car.angle += 0.06;
       moving = true;
     }
     if (p.keyIsDown(p.UP_ARROW)) {
-      car.x += p.cos(car.angle) * car.speed;
-      car.y += p.sin(car.angle) * car.speed;
+      gameState.car.x += p.cos(gameState.car.angle) * gameState.car.speed;
+      gameState.car.y += p.sin(gameState.car.angle) * gameState.car.speed;
       moving = true;
     }
     if (p.keyIsDown(p.DOWN_ARROW)) {
-      car.x -= p.cos(car.angle) * car.speed * 0.6;
-      car.y -= p.sin(car.angle) * car.speed * 0.6;
+      gameState.car.x -= p.cos(gameState.car.angle) * gameState.car.speed * 0.6;
+      gameState.car.y -= p.sin(gameState.car.angle) * gameState.car.speed * 0.6;
       moving = true;
     }
 
-    car.x = p.constrain(car.x, car.w / 2, p.width - car.w / 2);
-    car.y = p.constrain(car.y, car.h / 2, p.height - 20);
+    gameState.car.x = p.constrain(
+      gameState.car.x,
+      gameState.car.w / 2,
+      p.width - gameState.car.w / 2
+    );
+    gameState.car.y = p.constrain(
+      gameState.car.y,
+      gameState.car.h / 2,
+      p.height - 20
+    );
 
     if (audioStarted && motorGain && audioContext) {
       motorGain.gain.setTargetAtTime(
@@ -667,14 +617,14 @@ const sketch = (p: p5) => {
   }
 
   function moveEnemies() {
-    for (let e of enemies) {
+    for (let e of gameState.enemies) {
       e.x += e.speed;
       if (e.x > p.width + 100) e.x = -150;
     }
   }
 
   function moveBoats() {
-    for (let boat of boats) {
+    for (let boat of gameState.boats) {
       boat.x += boat.speed;
       boat.wave += 0.02;
       if (boat.x > p.width + 100) {
@@ -685,35 +635,43 @@ const sketch = (p: p5) => {
   }
 
   function checkCollisions() {
-    for (let o of obstacles) {
-      if (checkCollision(car, o)) {
-        if (!gameOver) playHorn();
-        gameOver = true;
+    if (!gameState.car || !gameState.parkingSpot) return;
+
+    for (let o of gameState.obstacles) {
+      if (checkCollision(gameState.car, o)) {
+        if (!gameState.gameOver) playHorn();
+        gameState.gameOver = true;
       }
     }
 
-    for (let e of enemies) {
-      if (checkCollision(car, e)) {
-        if (!gameOver) playHorn();
-        gameOver = true;
+    for (let e of gameState.enemies) {
+      if (checkCollision(gameState.car, e)) {
+        if (!gameState.gameOver) playHorn();
+        gameState.gameOver = true;
       }
-      if (p.abs(e.x - parkingSpot.x) < 20 && p.abs(e.y - parkingSpot.y) < 20) {
-        if (!gameOver) playEnemySiren();
-        gameOver = true;
-      }
-    }
-
-    for (let b of boats) {
-      if (checkCollision(car, b)) {
-        if (!gameOver) playHorn();
-        gameOver = true;
+      if (
+        p.abs(e.x - gameState.parkingSpot.x) < 20 &&
+        p.abs(e.y - gameState.parkingSpot.y) < 20
+      ) {
+        if (!gameState.gameOver) playEnemySiren();
+        gameState.gameOver = true;
       }
     }
 
-    for (let fake of fakeParkingSpots) {
-      if (p.abs(car.x - fake.x) < 25 && p.abs(car.y - fake.y) < 20) {
-        if (!gameOver) playHorn();
-        gameOver = true;
+    for (let b of gameState.boats) {
+      if (checkCollision(gameState.car, b)) {
+        if (!gameState.gameOver) playHorn();
+        gameState.gameOver = true;
+      }
+    }
+
+    for (let fake of gameState.fakeParkingSpots) {
+      if (
+        p.abs(gameState.car.x - fake.x) < 25 &&
+        p.abs(gameState.car.y - fake.y) < 20
+      ) {
+        if (!gameState.gameOver) playHorn();
+        gameState.gameOver = true;
       }
     }
   }
@@ -730,12 +688,13 @@ const sketch = (p: p5) => {
   }
 
   function checkParking() {
-    let dx = p.abs(car.x - parkingSpot.x);
-    let dy = p.abs(car.y - parkingSpot.y);
-    let dAngle = p.abs(car.angle % (2 * p.PI));
+    if (!gameState.car || !gameState.parkingSpot) return;
+    let dx = p.abs(gameState.car.x - gameState.parkingSpot.x);
+    let dy = p.abs(gameState.car.y - gameState.parkingSpot.y);
+    let dAngle = p.abs(gameState.car.angle % (2 * p.PI));
     if (dx < 18 && dy < 18 && dAngle < 0.4) {
-      if (!win) playWinTone();
-      win = true;
+      if (!gameState.win) playWinTone();
+      gameState.win = true;
     }
   }
 
@@ -770,12 +729,16 @@ const sketch = (p: p5) => {
   }
 
   p.keyPressed = () => {
-    if ((p.key === "r" || p.key === "R") && gameOver) {
-      startLevel(level);
+    if ((p.key === "r" || p.key === "R") && gameState.gameOver) {
+      startLevel(gameState.level);
     }
-    if ((p.key === "n" || p.key === "N") && win && level < 11) {
-      level++;
-      startLevel(level);
+    if (
+      (p.key === "n" || p.key === "N") &&
+      gameState.win &&
+      gameState.level < 11
+    ) {
+      gameState.nextLevel();
+      startLevel(gameState.level);
     }
   };
 
