@@ -33,7 +33,13 @@ export class Game {
     // Initialize all managers
     this.gameState = new GameStateManager();
     this.audioManager = new AudioManager();
-    this.renderer = new Renderer(p, this.gameState, this.viewport);
+    this.uiManager = new UIManager(p, this.viewport);
+    this.renderer = new Renderer(
+      p,
+      this.gameState,
+      this.viewport,
+      this.uiManager
+    );
     this.levelGenerator = new LevelGenerator(p, this.gameState);
     this.movementManager = new MovementManager(
       p,
@@ -50,7 +56,8 @@ export class Game {
       p,
       this.gameState,
       this.levelGenerator,
-      this.audioManager
+      this.audioManager,
+      this.uiManager
     );
     this.gameLogic = new GameLogicManager(
       p,
@@ -62,7 +69,6 @@ export class Game {
       this.collisionManager,
       this.inputManager
     );
-    this.uiManager = new UIManager(p, this.viewport);
   }
 
   public async setup(): Promise<void> {
@@ -119,5 +125,9 @@ export class Game {
 
   public getRenderer(): Renderer {
     return this.renderer;
+  }
+
+  public getUIManager(): UIManager {
+    return this.uiManager;
   }
 }

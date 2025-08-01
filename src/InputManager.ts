@@ -2,6 +2,7 @@ import type p5 from "p5";
 import { GameStateManager } from "./GameState";
 import { LevelGenerator } from "./LevelGenerator";
 import { AudioManager } from "./AudioManager";
+import { UIManager } from "./UIManager";
 import { config } from "./config";
 
 export class InputManager {
@@ -9,17 +10,20 @@ export class InputManager {
   private gameState: GameStateManager;
   private levelGenerator: LevelGenerator;
   private audioManager: AudioManager;
+  private uiManager: UIManager;
 
   constructor(
     p: p5,
     gameState: GameStateManager,
     levelGenerator: LevelGenerator,
-    audioManager: AudioManager
+    audioManager: AudioManager,
+    uiManager: UIManager
   ) {
     this.p = p;
     this.gameState = gameState;
     this.levelGenerator = levelGenerator;
     this.audioManager = audioManager;
+    this.uiManager = uiManager;
   }
 
   public setupKeyHandlers(): void {
@@ -29,6 +33,14 @@ export class InputManager {
   }
 
   private handleKeyPressed(): void {
+    // Handle text input first (if UI is active)
+    if (this.uiManager.isActive()) {
+      const handled = this.uiManager.handleKeyPressed();
+      if (handled) {
+        return; // Don't process other keys if text input handled it
+      }
+    }
+
     // Development toggle keys (only in development mode)
     if (config.development) {
       // Toggle dev UI with 'D' key

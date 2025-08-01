@@ -2,20 +2,28 @@ import type p5 from "p5";
 import type { Obstacle, Enemy } from "./types";
 import { GameStateManager } from "./GameState";
 import { ViewportManager } from "./ViewportManager";
+import { UIManager } from "./UIManager";
 import { config } from "./config";
 
 export class Renderer {
   private p: p5;
   private gameState: GameStateManager;
   private viewport: ViewportManager;
+  private uiManager: UIManager;
 
   private uiFontSize: number = 20;
   private uiFontColor: number = 255;
 
-  constructor(p: p5, gameState: GameStateManager, viewport: ViewportManager) {
+  constructor(
+    p: p5,
+    gameState: GameStateManager,
+    viewport: ViewportManager,
+    uiManager: UIManager
+  ) {
     this.p = p;
     this.gameState = gameState;
     this.viewport = viewport;
+    this.uiManager = uiManager;
   }
 
   // Viewport transformation methods
@@ -72,6 +80,9 @@ export class Renderer {
       this.viewport.logicalWidth / 2,
       this.viewport.logicalHeight / 2 - 50
     );
+
+    // Draw the text input if UI is active
+    this.uiManager.drawTextInput();
   }
 
   public drawCastle(): void {
