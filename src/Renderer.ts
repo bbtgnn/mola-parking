@@ -9,6 +9,9 @@ export class Renderer {
   private gameState: GameStateManager;
   private viewport: ViewportManager;
 
+  private uiFontSize: number = 40;
+  private uiFontColor: number = 255;
+
   constructor(p: p5, gameState: GameStateManager, viewport: ViewportManager) {
     this.p = p;
     this.gameState = gameState;
@@ -261,36 +264,39 @@ export class Renderer {
   }
 
   public drawUI(): void {
-    this.p.fill(0);
-    this.p.stroke(255, 255, 0);
-    this.p.strokeWeight(2);
+    this.p.fill(50);
     this.p.rect(0, 0, this.viewport.logicalWidth, 60);
-    this.p.fill(255, 255, 0);
+
     this.p.noStroke();
-    this.p.textSize(18);
+    this.p.fill(this.uiFontColor);
+    this.p.textSize(this.uiFontSize);
     this.p.textAlign(this.p.LEFT);
-    this.p.text("LIVELLO: " + this.gameState.level, 20, 25);
-    this.p.text("PLAYER: " + this.gameState.playerName, 20, 45);
-
-    // Development mode indicator
-    if (config.development) {
-      this.p.fill(255, 0, 0);
-      this.p.textSize(12);
-      this.p.text("DEV MODE", 20, 55);
-    }
-
-    // BPM indicator
-    this.p.fill(0, 255, 255);
-    this.p.textSize(14);
-    this.p.textAlign(this.p.CENTER);
+    this.p.text("LIVELLO . " + this.gameState.level, 20, 25);
     this.p.text(
-      "BPM: " + this.calculateBPM(),
-      this.viewport.logicalWidth / 2,
-      25
+      "PLAYER . " + this.gameState.playerName,
+      20,
+      25 + this.uiFontSize
     );
 
+    // // Development mode indicator
+    // if (config.development) {
+    //   this.p.fill(255, 0, 0);
+    //   this.p.textSize(12);
+    //   this.p.text("DEV MODE", 20, 55);
+    // }
+
+    // // BPM indicator
+    // this.p.fill(0, 255, 255);
+    // this.p.textSize(14);
+    // this.p.textAlign(this.p.CENTER);
+    // this.p.text(
+    //   "BPM: " + this.calculateBPM(),
+    //   this.viewport.logicalWidth / 2,
+    //   25
+    // );
+
     this.p.textAlign(this.p.RIGHT);
-    this.p.text("MOLA ARCADE", this.viewport.logicalWidth - 20, 25);
+    this.p.text("MOL-E-STO\nARCADE", this.viewport.logicalWidth - 20, 25);
   }
 
   private calculateBPM(): number {
