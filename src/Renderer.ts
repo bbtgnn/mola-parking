@@ -23,8 +23,16 @@ export class Renderer {
     this.viewport.applyGameTransform();
   }
 
+  public applyGameTransformWithClip(): void {
+    this.viewport.applyGameTransformWithClip();
+  }
+
   public resetTransform(): void {
     this.viewport.resetTransform();
+  }
+
+  public resetTransformWithClip(): void {
+    this.viewport.resetTransformWithClip();
   }
 
   // Main rendering methods

@@ -126,10 +126,10 @@ export class GameLogicManager {
       return;
     }
 
-    // Apply viewport transformation for all game elements
-    this.renderer.applyGameTransform();
+    // Apply viewport transformation with clipping for all game elements
+    this.renderer.applyGameTransformWithClip();
 
-    // Render all game elements (now in logical coordinates)
+    // Render all game elements (now in logical coordinates with clipping)
     this.renderer.drawCastle();
     this.renderer.drawFakeParkingSpots();
     this.renderer.drawParkingSpot();
@@ -140,8 +140,8 @@ export class GameLogicManager {
     this.renderer.drawUI();
     this.renderer.drawMessages();
 
-    // Reset transformation
-    this.renderer.resetTransform();
+    // Reset transformation with clipping
+    this.renderer.resetTransformWithClip();
 
     // Render dev UI in actual screen coordinates (outside game world)
     this.renderer.drawDevUI();

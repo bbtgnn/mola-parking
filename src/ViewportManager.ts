@@ -100,8 +100,37 @@ export class ViewportManager {
     this.p.scale(this.scale);
   }
 
+  // Setup coordinate transformation with clipping for game objects
+  public applyGameTransformWithClip(): void {
+    this.p.push();
+
+    // Save the current drawing context for clipping
+    (this.p as any).drawingContext.save();
+
+    // Create a clipping path for the game area (in actual screen coordinates)
+    (this.p as any).drawingContext.beginPath();
+    (this.p as any).drawingContext.rect(
+      this.offsetX,
+      this.offsetY,
+      this.scaledWidth,
+      this.scaledHeight
+    );
+    (this.p as any).drawingContext.clip();
+
+    // Then apply transformation to logical coordinates
+    this.p.translate(this.offsetX, this.offsetY);
+    this.p.scale(this.scale);
+  }
+
   // Reset transformation
   public resetTransform(): void {
+    this.p.pop();
+  }
+
+  // Reset transformation with clipping restoration
+  public resetTransformWithClip(): void {
+    // Restore the drawing context (removes clipping)
+    (this.p as any).drawingContext.restore();
     this.p.pop();
   }
 
