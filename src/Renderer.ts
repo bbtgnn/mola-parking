@@ -9,7 +9,7 @@ export class Renderer {
   private gameState: GameStateManager;
   private viewport: ViewportManager;
 
-  private uiFontSize: number = 40;
+  private uiFontSize: number = 20;
   private uiFontColor: number = 255;
 
   constructor(p: p5, gameState: GameStateManager, viewport: ViewportManager) {
@@ -272,13 +272,7 @@ export class Renderer {
     this.p.noStroke();
     this.p.fill(this.uiFontColor);
     this.p.textSize(this.uiFontSize);
-    this.p.textAlign(this.p.LEFT);
-    this.p.text("LIVELLO . " + this.gameState.level, 20, 25);
-    this.p.text(
-      "PLAYER . " + this.gameState.playerName,
-      20,
-      25 + this.uiFontSize
-    );
+    this.p.textLeading(this.uiFontSize * 1.5);
 
     // // Development mode indicator
     // if (config.development) {
@@ -297,8 +291,19 @@ export class Renderer {
     //   25
     // );
 
+    this.p.textAlign(this.p.LEFT);
+    this.p.text(
+      `LIVELLO - ${this.gameState.level}\nPLAYER - ${this.gameState.playerName}`,
+      0,
+      this.uiFontSize
+    );
+
     this.p.textAlign(this.p.RIGHT);
-    this.p.text("MOL-E-STO\nARCADE", this.viewport.logicalWidth - 20, 25);
+    this.p.text(
+      "MOL-E-STO\nARCADE",
+      this.viewport.logicalWidth,
+      this.uiFontSize
+    );
   }
 
   public drawDevUI(): void {

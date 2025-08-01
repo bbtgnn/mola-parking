@@ -93,7 +93,7 @@ export class Game {
 
   public preload(): void {
     // Load the Monaco font from the public folder
-    this.font = this.p.loadFont("/ARCADECLASSIC.TTF");
+    this.font = this.p.loadFont("/PressStart2P-vaV7.ttf");
   }
 
   public draw(): void {

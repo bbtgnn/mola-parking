@@ -30,11 +30,15 @@ export class ViewportManager {
     this.actualWidth = window.innerWidth;
     this.actualHeight = window.innerHeight;
 
-    // Calculate uniform scale to maintain aspect ratio
-    const scaleX = this.actualWidth / this.logicalWidth;
-    const scaleY = this.actualHeight / this.logicalHeight;
+    // Calculate available space accounting for minimum margin
+    const availableWidth = this.actualWidth - config.min_margin_pixels * 2;
+    const availableHeight = this.actualHeight - config.min_margin_pixels * 2;
 
-    // Use the smaller scale to ensure the entire game fits on screen
+    // Calculate uniform scale to maintain aspect ratio within available space
+    const scaleX = availableWidth / this.logicalWidth;
+    const scaleY = availableHeight / this.logicalHeight;
+
+    // Use the smaller scale to ensure the entire game fits with margin
     this.scale = Math.min(scaleX, scaleY);
 
     // Calculate scaled dimensions
