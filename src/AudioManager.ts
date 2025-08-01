@@ -1,3 +1,5 @@
+import { config } from "./config";
+
 export class AudioManager {
   private audioContext: AudioContext | null = null;
   private motorGain: GainNode | null = null;
@@ -49,6 +51,11 @@ export class AudioManager {
 
   public async initializeAudio(): Promise<void> {
     if (this.audioStarted) return;
+
+    // Skip audio initialization if disabled in dev mode
+    if (config.disable_audio_in_dev) {
+      return;
+    }
 
     try {
       this.audioContext = new (window.AudioContext ||
@@ -138,7 +145,13 @@ export class AudioManager {
   }
 
   public playMotorSound(isMoving: boolean): void {
-    if (!this.audioStarted || !this.motorGain || !this.audioContext) return;
+    if (
+      config.disable_audio_in_dev ||
+      !this.audioStarted ||
+      !this.motorGain ||
+      !this.audioContext
+    )
+      return;
 
     if (isMoving) {
       this.motorGain.gain.setTargetAtTime(
@@ -156,7 +169,13 @@ export class AudioManager {
   }
 
   public playHorn(): void {
-    if (!this.audioStarted || !this.hornGain || !this.audioContext) return;
+    if (
+      config.disable_audio_in_dev ||
+      !this.audioStarted ||
+      !this.hornGain ||
+      !this.audioContext
+    )
+      return;
 
     this.hornGain.gain.setTargetAtTime(
       0.2,
@@ -175,7 +194,13 @@ export class AudioManager {
   }
 
   public playWinSound(): void {
-    if (!this.audioStarted || !this.winGain || !this.audioContext) return;
+    if (
+      config.disable_audio_in_dev ||
+      !this.audioStarted ||
+      !this.winGain ||
+      !this.audioContext
+    )
+      return;
 
     this.winGain.gain.setTargetAtTime(0.2, this.audioContext.currentTime, 0.05);
     setTimeout(
@@ -190,7 +215,13 @@ export class AudioManager {
   }
 
   public playEnemySiren(): void {
-    if (!this.audioStarted || !this.enemyGain || !this.audioContext) return;
+    if (
+      config.disable_audio_in_dev ||
+      !this.audioStarted ||
+      !this.enemyGain ||
+      !this.audioContext
+    )
+      return;
 
     this.enemyGain.gain.setTargetAtTime(
       0.2,
@@ -210,6 +241,7 @@ export class AudioManager {
 
   public playMusic(): void {
     if (
+      config.disable_audio_in_dev ||
       !this.audioStarted ||
       !this.musicOsc ||
       !this.bassOsc ||
@@ -261,6 +293,54 @@ export class AudioManager {
     if (this.musicInterval) {
       clearInterval(this.musicInterval);
       this.musicInterval = null;
+    }
+  }
+
+  public pauseAllAudio(): void {
+    // Stop music
+    this.stopMusic();
+
+    // Mute all gain nodes to stop the continuous noise
+    if (this.audioContext) {
+      if (this.motorGain) {
+        this.motorGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+      }
+      if (this.hornGain) {
+        this.hornGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+      }
+      if (this.winGain) {
+        this.winGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+      }
+      if (this.enemyGain) {
+        this.enemyGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+      }
+      if (this.musicGain) {
+        this.musicGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+      }
+    }
+  }
+
+  public resumeAudio(): void {
+    // Only resume if audio was properly initialized
+    if (!this.audioStarted || !this.audioContext) {
+      return;
+    }
+
+    // Restore gain values to their defaults (but keep them at 0 initially)
+    if (this.motorGain) {
+      this.motorGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+    }
+    if (this.hornGain) {
+      this.hornGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+    }
+    if (this.winGain) {
+      this.winGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+    }
+    if (this.enemyGain) {
+      this.enemyGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+    }
+    if (this.musicGain) {
+      this.musicGain.gain.setValueAtTime(0.05, this.audioContext.currentTime);
     }
   }
 

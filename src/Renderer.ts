@@ -282,6 +282,89 @@ export class Renderer {
     return Math.round(minBPM + (maxBPM - minBPM) * progress);
   }
 
+  public drawDevUI(): void {
+    if (!config.show_dev_ui) return;
+
+    // Dev panel background
+    this.p.push();
+    this.p.fill(0, 0, 0, 150);
+    this.p.noStroke();
+    this.p.rect(10, 10, 280, 260);
+
+    // Dev panel content
+    this.p.fill(0, 255, 0);
+    this.p.textAlign(this.p.LEFT, this.p.TOP);
+    this.p.textSize(14);
+
+    let yPos = 25;
+    const lineHeight = 18;
+
+    this.p.text("🛠️ DEV MODE", 20, yPos);
+    yPos += lineHeight * 1.5;
+
+    this.p.fill(255);
+    this.p.textSize(12);
+
+    // Game state info
+    this.p.text(`State: ${this.gameState.gameState}`, 20, yPos);
+    yPos += lineHeight;
+    this.p.text(`Level: ${this.gameState.level}`, 20, yPos);
+    yPos += lineHeight;
+    this.p.text(`Player: ${this.gameState.playerName}`, 20, yPos);
+    yPos += lineHeight;
+
+    // Game objects count
+    this.p.text(`Obstacles: ${this.gameState.obstacles.length}`, 20, yPos);
+    yPos += lineHeight;
+    this.p.text(`Enemies: ${this.gameState.enemies.length}`, 20, yPos);
+    yPos += lineHeight;
+    this.p.text(`Boats: ${this.gameState.boats.length}`, 20, yPos);
+    yPos += lineHeight;
+    this.p.text(
+      `Fake Spots: ${this.gameState.fakeParkingSpots.length}`,
+      20,
+      yPos
+    );
+    yPos += lineHeight;
+
+    // Audio status
+    const audioStatus = config.disable_audio_in_dev ? "DISABLED" : "ENABLED";
+    this.p.text(`Audio: ${audioStatus}`, 20, yPos);
+    yPos += lineHeight;
+
+    // Car position (if car exists)
+    if (this.gameState.car) {
+      this.p.text(
+        `Car: (${Math.round(this.gameState.car.x)}, ${Math.round(
+          this.gameState.car.y
+        )})`,
+        20,
+        yPos
+      );
+    } else {
+      this.p.text("Car: NOT INITIALIZED", 20, yPos);
+    }
+    yPos += lineHeight * 1.5;
+
+    // Keyboard shortcuts
+    this.p.fill(255, 255, 0);
+    this.p.textSize(11);
+    this.p.text("⌨️ SHORTCUTS:", 20, yPos);
+    yPos += lineHeight;
+
+    this.p.fill(200);
+    this.p.textSize(10);
+    this.p.text("D - Toggle Dev UI", 20, yPos);
+    yPos += lineHeight * 0.8;
+    this.p.text("A - Toggle Audio", 20, yPos);
+    yPos += lineHeight * 0.8;
+    this.p.text("R - Restart Level", 20, yPos);
+    yPos += lineHeight * 0.8;
+    this.p.text("N - Next Level", 20, yPos);
+
+    this.p.pop();
+  }
+
   public drawMessages(): void {
     this.p.textAlign(this.p.CENTER);
     if (this.gameState.win && this.gameState.level <= 10) {
