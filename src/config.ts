@@ -13,15 +13,15 @@ export interface GameConfig {
 }
 
 export const config: GameConfig = {
-  development: import.meta.env.DEV,
-  skip_home_if_dev: false,
-  debug_mode: import.meta.env.DEV,
-  disable_audio_in_dev: true, // Set to false to enable audio in development
-  show_dev_ui: import.meta.env.DEV,
-  auto_start_level: import.meta.env.DEV ? 1 : undefined,
+  development: false, // PRODUCTION: Always false for production build
+  skip_home_if_dev: false, // PRODUCTION: Always show intro screen
+  debug_mode: false, // PRODUCTION: Disable debug mode
+  disable_audio_in_dev: false, // PRODUCTION: Enable audio
+  show_dev_ui: false, // PRODUCTION: Hide development UI
+  auto_start_level: undefined, // PRODUCTION: No auto-start, normal game flow
   // Color configuration
-  game_background_color: [0, 0, 0], // Dark red for game area
-  letterbox_color: [0, 0, 255], // Blue for letterbox/pillarbox areas
+  game_background_color: [0, 0, 0], // Black game area background
+  letterbox_color: [0, 0, 255], // Blue letterbox/pillarbox areas
   // Layout configuration
   min_margin_pixels: 20, // Minimum margin around game area in pixels
 };

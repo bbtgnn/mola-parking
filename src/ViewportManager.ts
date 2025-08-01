@@ -52,13 +52,8 @@ export class ViewportManager {
     // Resize canvas to fill entire browser window
     this.p.resizeCanvas(this.actualWidth, this.actualHeight);
 
-    console.log(
-      `🖥️ Viewport updated: ${this.actualWidth}×${
-        this.actualHeight
-      }, scale: ${this.scale.toFixed(2)}, offset: (${this.offsetX.toFixed(
-        0
-      )}, ${this.offsetY.toFixed(0)})`
-    );
+    // PRODUCTION: Console logs removed for performance
+    // console.log(`🖥️ Viewport updated: ${this.actualWidth}×${this.actualHeight}, scale: ${this.scale.toFixed(2)}, offset: (${this.offsetX.toFixed(0)}, ${this.offsetY.toFixed(0)})`);
   }
 
   // Convert logical coordinates to actual screen coordinates

@@ -363,9 +363,8 @@ export class AudioManager {
   public resumeAudio(): void {
     // This method is deprecated - use initializeAudio() instead
     // Audio will be properly re-initialized when needed
-    console.log(
-      "🔊 resumeAudio() called - audio will be re-initialized when needed"
-    );
+    // PRODUCTION: Console logs removed for performance
+    // console.log("🔊 resumeAudio() called - audio will be re-initialized when needed");
   }
 
   public stopAllAudio(): void {
