@@ -300,48 +300,72 @@ export class AudioManager {
     // Stop music
     this.stopMusic();
 
-    // Mute all gain nodes to stop the continuous noise
-    if (this.audioContext) {
-      if (this.motorGain) {
-        this.motorGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+    // Stop and disconnect all oscillators
+    if (this.motorOsc) {
+      try {
+        this.motorOsc.stop();
+      } catch (e) {
+        /* ignore */
       }
-      if (this.hornGain) {
-        this.hornGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-      }
-      if (this.winGain) {
-        this.winGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-      }
-      if (this.enemyGain) {
-        this.enemyGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-      }
-      if (this.musicGain) {
-        this.musicGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-      }
+      this.motorOsc.disconnect();
+      this.motorOsc = null;
     }
+    if (this.hornOsc) {
+      try {
+        this.hornOsc.stop();
+      } catch (e) {
+        /* ignore */
+      }
+      this.hornOsc.disconnect();
+      this.hornOsc = null;
+    }
+    if (this.winOsc) {
+      try {
+        this.winOsc.stop();
+      } catch (e) {
+        /* ignore */
+      }
+      this.winOsc.disconnect();
+      this.winOsc = null;
+    }
+    if (this.enemyOsc) {
+      try {
+        this.enemyOsc.stop();
+      } catch (e) {
+        /* ignore */
+      }
+      this.enemyOsc.disconnect();
+      this.enemyOsc = null;
+    }
+    if (this.musicOsc) {
+      try {
+        this.musicOsc.stop();
+      } catch (e) {
+        /* ignore */
+      }
+      this.musicOsc.disconnect();
+      this.musicOsc = null;
+    }
+    if (this.bassOsc) {
+      try {
+        this.bassOsc.stop();
+      } catch (e) {
+        /* ignore */
+      }
+      this.bassOsc.disconnect();
+      this.bassOsc = null;
+    }
+
+    // Reset the audio started flag so it can be re-initialized
+    this.audioStarted = false;
   }
 
   public resumeAudio(): void {
-    // Only resume if audio was properly initialized
-    if (!this.audioStarted || !this.audioContext) {
-      return;
-    }
-
-    // Restore gain values to their defaults (but keep them at 0 initially)
-    if (this.motorGain) {
-      this.motorGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-    }
-    if (this.hornGain) {
-      this.hornGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-    }
-    if (this.winGain) {
-      this.winGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-    }
-    if (this.enemyGain) {
-      this.enemyGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-    }
-    if (this.musicGain) {
-      this.musicGain.gain.setValueAtTime(0.05, this.audioContext.currentTime);
-    }
+    // This method is deprecated - use initializeAudio() instead
+    // Audio will be properly re-initialized when needed
+    console.log(
+      "🔊 resumeAudio() called - audio will be re-initialized when needed"
+    );
   }
 
   public stopAllAudio(): void {
