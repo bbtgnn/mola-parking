@@ -1,16 +1,24 @@
 import type p5 from "p5";
 import { GameStateManager } from "./GameState";
 import { AudioManager } from "./AudioManager";
+import { ViewportManager } from "./ViewportManager";
 
 export class MovementManager {
   private p: p5;
   private gameState: GameStateManager;
   private audioManager: AudioManager;
+  private viewport: ViewportManager;
 
-  constructor(p: p5, gameState: GameStateManager, audioManager: AudioManager) {
+  constructor(
+    p: p5,
+    gameState: GameStateManager,
+    audioManager: AudioManager,
+    viewport: ViewportManager
+  ) {
     this.p = p;
     this.gameState = gameState;
     this.audioManager = audioManager;
+    this.viewport = viewport;
   }
 
   public updateAllMovement(): void {
@@ -47,16 +55,16 @@ export class MovementManager {
       moving = true;
     }
 
-    // Constrain car to screen boundaries
+    // Constrain car to logical game boundaries
     this.gameState.car.x = this.p.constrain(
       this.gameState.car.x,
       this.gameState.car.w / 2,
-      this.p.width - this.gameState.car.w / 2
+      this.viewport.logicalWidth - this.gameState.car.w / 2
     );
     this.gameState.car.y = this.p.constrain(
       this.gameState.car.y,
       this.gameState.car.h / 2,
-      this.p.height - 20
+      this.viewport.logicalHeight - 20
     );
 
     // Play motor sound based on movement
@@ -66,7 +74,7 @@ export class MovementManager {
   public moveEnemies(): void {
     for (let enemy of this.gameState.enemies) {
       enemy.x += enemy.speed;
-      if (enemy.x > this.p.width + 100) {
+      if (enemy.x > this.viewport.logicalWidth + 100) {
         enemy.x = -150;
       }
     }
@@ -76,7 +84,7 @@ export class MovementManager {
     for (let boat of this.gameState.boats) {
       boat.x += boat.speed;
       boat.wave += 0.02;
-      if (boat.x > this.p.width + 100) {
+      if (boat.x > this.viewport.logicalWidth + 100) {
         boat.x = -this.p.random(100, 200);
         boat.y = this.p.random(50, 150);
       }

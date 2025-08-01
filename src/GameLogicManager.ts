@@ -122,7 +122,10 @@ export class GameLogicManager {
       return;
     }
 
-    // Render all game elements
+    // Apply viewport transformation for all game elements
+    this.renderer.applyGameTransform();
+
+    // Render all game elements (now in logical coordinates)
     this.renderer.drawCastle();
     this.renderer.drawFakeParkingSpots();
     this.renderer.drawParkingSpot();
@@ -130,12 +133,13 @@ export class GameLogicManager {
     this.renderer.drawEnemies();
     this.renderer.drawBoats();
     this.renderer.drawCar();
-
-    // Render UI elements
     this.renderer.drawUI();
     this.renderer.drawMessages();
 
-    // Render dev UI (only in development mode)
+    // Reset transformation
+    this.renderer.resetTransform();
+
+    // Render dev UI in actual screen coordinates (outside game world)
     this.renderer.drawDevUI();
   }
 

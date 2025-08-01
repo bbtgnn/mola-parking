@@ -1,15 +1,27 @@
 import type p5 from "p5";
 import type { Obstacle, Enemy } from "./types";
 import { GameStateManager } from "./GameState";
+import { ViewportManager } from "./ViewportManager";
 import { config } from "./config";
 
 export class Renderer {
   private p: p5;
   private gameState: GameStateManager;
+  private viewport: ViewportManager;
 
-  constructor(p: p5, gameState: GameStateManager) {
+  constructor(p: p5, gameState: GameStateManager, viewport: ViewportManager) {
     this.p = p;
     this.gameState = gameState;
+    this.viewport = viewport;
+  }
+
+  // Viewport transformation methods
+  public applyGameTransform(): void {
+    this.viewport.applyGameTransform();
+  }
+
+  public resetTransform(): void {
+    this.viewport.resetTransform();
   }
 
   // Main rendering methods
@@ -19,51 +31,59 @@ export class Renderer {
     this.p.strokeWeight(2);
     this.p.textSize(60);
     this.p.textAlign(this.p.CENTER, this.p.CENTER);
-    this.p.text("MOLESTO", this.p.width / 2, this.p.height / 2 - 150);
+    this.p.text(
+      "MOLESTO",
+      this.viewport.logicalWidth / 2,
+      this.viewport.logicalHeight / 2 - 150
+    );
 
     this.p.fill(0, 255, 0);
     this.p.noStroke();
     this.p.textSize(24);
     this.p.text(
       "Il diritto al posto negato",
-      this.p.width / 2,
-      this.p.height / 2 - 100
+      this.viewport.logicalWidth / 2,
+      this.viewport.logicalHeight / 2 - 100
     );
 
     this.p.fill(255, 255, 0);
     this.p.textSize(18);
-    this.p.text("REGOLE DEL GIOOCO ", this.p.width / 2, this.p.height / 2 - 70);
+    this.p.text(
+      "REGOLE DEL GIOOCO ",
+      this.viewport.logicalWidth / 2,
+      this.viewport.logicalHeight / 2 - 70
+    );
     this.p.textSize(15);
     this.p.text(
       "OBBIETTIVO: Parcheggia nel posto GIALLO",
-      this.p.width / 2,
-      this.p.height / 2 - 50
+      this.viewport.logicalWidth / 2,
+      this.viewport.logicalHeight / 2 - 50
     );
     this.p.text(
       "Evita i parcheggi ROSSI (sono finti!)",
-      this.p.width / 2,
-      this.p.height / 2 - 30
+      this.viewport.logicalWidth / 2,
+      this.viewport.logicalHeight / 2 - 30
     );
     this.p.text(
       "Schiva barche e auto nemiche",
-      this.p.width / 2,
-      this.p.height / 2 - 10
+      this.viewport.logicalWidth / 2,
+      this.viewport.logicalHeight / 2 - 10
     );
     this.p.text(
       "Usa le frecce per muoverti",
-      this.p.width / 2,
-      this.p.height / 2 + 10
+      this.viewport.logicalWidth / 2,
+      this.viewport.logicalHeight / 2 + 10
     );
     this.p.text(
       "SOLO CHI VINCE PUO DECIDERE!",
-      this.p.width / 2,
-      this.p.height / 2 + 35
+      this.viewport.logicalWidth / 2,
+      this.viewport.logicalHeight / 2 + 35
     );
   }
 
   public drawCastle(): void {
-    let cx = this.p.width / 2;
-    let cy = this.p.height / 2 - 50;
+    let cx = this.viewport.logicalWidth / 2;
+    let cy = this.viewport.logicalHeight / 2 - 50;
 
     this.p.push();
     this.p.translate(cx, cy);
@@ -244,7 +264,7 @@ export class Renderer {
     this.p.fill(0);
     this.p.stroke(255, 255, 0);
     this.p.strokeWeight(2);
-    this.p.rect(0, 0, this.p.width, 60);
+    this.p.rect(0, 0, this.viewport.logicalWidth, 60);
     this.p.fill(255, 255, 0);
     this.p.noStroke();
     this.p.textSize(18);
@@ -263,10 +283,14 @@ export class Renderer {
     this.p.fill(0, 255, 255);
     this.p.textSize(14);
     this.p.textAlign(this.p.CENTER);
-    this.p.text("BPM: " + this.calculateBPM(), this.p.width / 2, 25);
+    this.p.text(
+      "BPM: " + this.calculateBPM(),
+      this.viewport.logicalWidth / 2,
+      25
+    );
 
     this.p.textAlign(this.p.RIGHT);
-    this.p.text("MOLA ARCADE", this.p.width - 20, 25);
+    this.p.text("MOLA ARCADE", this.viewport.logicalWidth - 20, 25);
   }
 
   private calculateBPM(): number {
@@ -289,7 +313,7 @@ export class Renderer {
     this.p.push();
     this.p.fill(0, 0, 0, 150);
     this.p.noStroke();
-    this.p.rect(10, 10, 280, 260);
+    this.p.rect(10, 10, 320, 320);
 
     // Dev panel content
     this.p.fill(0, 255, 0);
@@ -344,7 +368,36 @@ export class Renderer {
     } else {
       this.p.text("Car: NOT INITIALIZED", 20, yPos);
     }
-    yPos += lineHeight * 1.5;
+    yPos += lineHeight;
+
+    // Viewport info
+    this.p.fill(100, 255, 255);
+    this.p.textSize(11);
+    this.p.text("🖥️ VIEWPORT:", 20, yPos);
+    yPos += lineHeight;
+
+    this.p.fill(200);
+    this.p.textSize(10);
+    this.p.text(
+      `Screen: ${this.viewport.actualWidth}×${this.viewport.actualHeight}`,
+      20,
+      yPos
+    );
+    yPos += lineHeight * 0.8;
+    this.p.text(`Scale: ${Math.round(this.viewport.scale * 100)}%`, 20, yPos);
+    yPos += lineHeight * 0.8;
+    this.p.text(
+      `Type: ${
+        this.viewport.offsetX > 0
+          ? "Pillarbox"
+          : this.viewport.offsetY > 0
+          ? "Letterbox"
+          : "Perfect fit"
+      }`,
+      20,
+      yPos
+    );
+    yPos += lineHeight * 1.2;
 
     // Keyboard shortcuts
     this.p.fill(255, 255, 0);
@@ -372,20 +425,28 @@ export class Renderer {
       this.p.stroke(0, 255, 0);
       this.p.strokeWeight(2);
       this.p.textSize(24);
-      this.p.text("PARCHEGGIO RIUSCITO! Premi N", this.p.width / 2, 100);
+      this.p.text(
+        "PARCHEGGIO RIUSCITO! Premi N",
+        this.viewport.logicalWidth / 2,
+        100
+      );
     }
     if (this.gameState.isGameComplete()) {
       this.p.fill(255, 255, 0);
       this.p.stroke(255, 255, 0);
       this.p.strokeWeight(2);
       this.p.textSize(32);
-      this.p.text("VITTORIA TOTALE!", this.p.width / 2, this.p.height / 2);
+      this.p.text(
+        "VITTORIA TOTALE!",
+        this.viewport.logicalWidth / 2,
+        this.viewport.logicalHeight / 2
+      );
       this.p.noStroke();
       this.p.textSize(20);
       this.p.text(
         "Complimenti " + this.gameState.playerName + "!",
-        this.p.width / 2,
-        this.p.height / 2 + 40
+        this.viewport.logicalWidth / 2,
+        this.viewport.logicalHeight / 2 + 40
       );
     }
     if (this.gameState.gameOver) {
@@ -393,7 +454,7 @@ export class Renderer {
       this.p.stroke(255, 0, 0);
       this.p.strokeWeight(2);
       this.p.textSize(24);
-      this.p.text("GAME OVER! Premi R", this.p.width / 2, 100);
+      this.p.text("GAME OVER! Premi R", this.viewport.logicalWidth / 2, 100);
     }
   }
 

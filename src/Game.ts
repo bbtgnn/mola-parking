@@ -8,6 +8,7 @@ import { CollisionManager } from "./CollisionManager";
 import { InputManager } from "./InputManager";
 import { GameLogicManager } from "./GameLogicManager";
 import { UIManager } from "./UIManager";
+import { ViewportManager } from "./ViewportManager";
 
 export class Game {
   private p: p5;
@@ -20,20 +21,25 @@ export class Game {
   private inputManager: InputManager;
   private gameLogic: GameLogicManager;
   private uiManager: UIManager;
+  private viewport: ViewportManager;
   private monacoFont: p5.Font | null = null;
 
   constructor(p: p5) {
     this.p = p;
 
+    // Initialize viewport manager first
+    this.viewport = new ViewportManager(p);
+
     // Initialize all managers
     this.gameState = new GameStateManager();
     this.audioManager = new AudioManager();
-    this.renderer = new Renderer(p, this.gameState);
+    this.renderer = new Renderer(p, this.gameState, this.viewport);
     this.levelGenerator = new LevelGenerator(p, this.gameState);
     this.movementManager = new MovementManager(
       p,
       this.gameState,
-      this.audioManager
+      this.audioManager,
+      this.viewport
     );
     this.collisionManager = new CollisionManager(
       p,
@@ -56,13 +62,18 @@ export class Game {
       this.collisionManager,
       this.inputManager
     );
-    this.uiManager = new UIManager(p);
+    this.uiManager = new UIManager(p, this.viewport);
   }
 
   public async setup(): Promise<void> {
-    // Create canvas
-    const canvas = this.p.createCanvas(1000, 700);
+    // Create responsive full-window canvas
+    const canvas = this.p.createCanvas(window.innerWidth, window.innerHeight);
     canvas.parent("app");
+
+    // Setup window resize handler
+    window.addEventListener("resize", () => {
+      this.viewport.updateViewport();
+    });
 
     // Setup game logic
     await this.gameLogic.setupGame();
@@ -87,6 +98,11 @@ export class Game {
 
   public draw(): void {
     this.gameLogic.update();
+
+    // Draw letterbox/pillarbox background first
+    this.viewport.drawLetterbox();
+
+    // Apply viewport transformation and render game
     this.gameLogic.render();
   }
 

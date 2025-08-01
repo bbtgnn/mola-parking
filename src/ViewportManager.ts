@@ -1,0 +1,145 @@
+import type p5 from "p5";
+
+export class ViewportManager {
+  // Logical (game) dimensions - fixed aspect ratio
+  public readonly logicalWidth = 1000;
+  public readonly logicalHeight = 700;
+  public readonly aspectRatio = this.logicalWidth / this.logicalHeight; // ~1.43
+
+  // Actual screen dimensions
+  public actualWidth: number = 0;
+  public actualHeight: number = 0;
+
+  // Scaling and positioning
+  public scale: number = 1;
+  public offsetX: number = 0;
+  public offsetY: number = 0;
+  public scaledWidth: number = 0;
+  public scaledHeight: number = 0;
+
+  private p: p5;
+
+  constructor(p: p5) {
+    this.p = p;
+    this.updateViewport();
+  }
+
+  public updateViewport(): void {
+    // Get actual browser dimensions
+    this.actualWidth = window.innerWidth;
+    this.actualHeight = window.innerHeight;
+
+    // Calculate uniform scale to maintain aspect ratio
+    const scaleX = this.actualWidth / this.logicalWidth;
+    const scaleY = this.actualHeight / this.logicalHeight;
+
+    // Use the smaller scale to ensure the entire game fits on screen
+    this.scale = Math.min(scaleX, scaleY);
+
+    // Calculate scaled dimensions
+    this.scaledWidth = this.logicalWidth * this.scale;
+    this.scaledHeight = this.logicalHeight * this.scale;
+
+    // Calculate centering offsets (letterbox/pillarbox)
+    this.offsetX = (this.actualWidth - this.scaledWidth) / 2;
+    this.offsetY = (this.actualHeight - this.scaledHeight) / 2;
+
+    // Resize canvas to fill entire browser window
+    this.p.resizeCanvas(this.actualWidth, this.actualHeight);
+
+    console.log(
+      `🖥️ Viewport updated: ${this.actualWidth}×${
+        this.actualHeight
+      }, scale: ${this.scale.toFixed(2)}, offset: (${this.offsetX.toFixed(
+        0
+      )}, ${this.offsetY.toFixed(0)})`
+    );
+  }
+
+  // Convert logical coordinates to actual screen coordinates
+  public logicalToActual(
+    logicalX: number,
+    logicalY: number
+  ): { x: number; y: number } {
+    return {
+      x: logicalX * this.scale + this.offsetX,
+      y: logicalY * this.scale + this.offsetY,
+    };
+  }
+
+  // Convert actual screen coordinates to logical coordinates
+  public actualToLogical(
+    actualX: number,
+    actualY: number
+  ): { x: number; y: number } {
+    return {
+      x: (actualX - this.offsetX) / this.scale,
+      y: (actualY - this.offsetY) / this.scale,
+    };
+  }
+
+  // Check if actual coordinates are within the game area
+  public isInGameArea(actualX: number, actualY: number): boolean {
+    return (
+      actualX >= this.offsetX &&
+      actualX <= this.offsetX + this.scaledWidth &&
+      actualY >= this.offsetY &&
+      actualY <= this.offsetY + this.scaledHeight
+    );
+  }
+
+  // Setup coordinate transformation for rendering game objects
+  public applyGameTransform(): void {
+    this.p.push();
+    this.p.translate(this.offsetX, this.offsetY);
+    this.p.scale(this.scale);
+  }
+
+  // Reset transformation
+  public resetTransform(): void {
+    this.p.pop();
+  }
+
+  // Draw letterbox/pillarbox bars
+  public drawLetterbox(): void {
+    this.p.push();
+    this.p.fill(0); // Black bars
+    this.p.noStroke();
+
+    // Horizontal letterbox bars (top and bottom)
+    if (this.offsetY > 0) {
+      this.p.rect(0, 0, this.actualWidth, this.offsetY); // Top bar
+      this.p.rect(
+        0,
+        this.offsetY + this.scaledHeight,
+        this.actualWidth,
+        this.offsetY
+      ); // Bottom bar
+    }
+
+    // Vertical pillarbox bars (left and right)
+    if (this.offsetX > 0) {
+      this.p.rect(0, 0, this.offsetX, this.actualHeight); // Left bar
+      this.p.rect(
+        this.offsetX + this.scaledWidth,
+        0,
+        this.offsetX,
+        this.actualHeight
+      ); // Right bar
+    }
+
+    this.p.pop();
+  }
+
+  // Get scaling info for debugging
+  public getScalingInfo(): string {
+    const scalePercent = Math.round(this.scale * 100);
+    const type =
+      this.offsetX > 0
+        ? "pillarbox"
+        : this.offsetY > 0
+        ? "letterbox"
+        : "perfect fit";
+    return `${scalePercent}% scale, ${type}`;
+  }
+}

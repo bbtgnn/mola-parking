@@ -1,13 +1,16 @@
 import type p5 from "p5";
+import { ViewportManager } from "./ViewportManager";
 import { config } from "./config";
 
 export class UIManager {
   private p: p5;
+  private viewport: ViewportManager;
   private nameInput: p5.Element | null = null;
   private playButton: p5.Element | null = null;
 
-  constructor(p: p5) {
+  constructor(p: p5, viewport: ViewportManager) {
     this.p = p;
+    this.viewport = viewport;
   }
 
   public createProductionUI(onStartGame: (playerName: string) => void): void {
@@ -16,14 +19,24 @@ export class UIManager {
       return;
     }
 
+    // Convert logical UI positions to actual screen coordinates
+    const inputLogicalPos = this.viewport.logicalToActual(
+      this.viewport.logicalWidth / 2 - 100,
+      this.viewport.logicalHeight / 2 + 50
+    );
+    const buttonLogicalPos = this.viewport.logicalToActual(
+      this.viewport.logicalWidth / 2 - 60,
+      this.viewport.logicalHeight / 2 + 100
+    );
+
     this.nameInput = this.p.createInput("");
-    this.nameInput.position(this.p.width / 2 - 100, this.p.height / 2 + 50);
-    this.nameInput.size(200);
+    this.nameInput.position(inputLogicalPos.x, inputLogicalPos.y);
+    this.nameInput.size(200 * this.viewport.scale); // Scale input size with viewport
     this.nameInput.attribute("placeholder", "Nome Pilota");
     this.styleInput(this.nameInput);
 
     this.playButton = this.p.createButton("START");
-    this.playButton.position(this.p.width / 2 - 60, this.p.height / 2 + 100);
+    this.playButton.position(buttonLogicalPos.x, buttonLogicalPos.y);
     this.styleButton(this.playButton);
     this.playButton.mousePressed(() => {
       if (this.nameInput) {
