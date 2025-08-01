@@ -19,24 +19,35 @@ export class UIManager {
       return;
     }
 
-    // Convert logical UI positions to actual screen coordinates
+    // Calculate element sizes with viewport scaling
+    const inputWidth = 200 * this.viewport.scale;
+    const buttonWidth = 120 * this.viewport.scale;
+
+    // Convert logical UI positions to actual screen coordinates (centered)
     const inputLogicalPos = this.viewport.logicalToActual(
-      this.viewport.logicalWidth / 2 - 100,
+      this.viewport.logicalWidth / 2,
       this.viewport.logicalHeight / 2 + 50
     );
     const buttonLogicalPos = this.viewport.logicalToActual(
-      this.viewport.logicalWidth / 2 - 60,
+      this.viewport.logicalWidth / 2,
       this.viewport.logicalHeight / 2 + 100
     );
 
     this.nameInput = this.p.createInput("");
-    this.nameInput.position(inputLogicalPos.x, inputLogicalPos.y);
-    this.nameInput.size(200 * this.viewport.scale); // Scale input size with viewport
+    this.nameInput.position(
+      inputLogicalPos.x - inputWidth / 2,
+      inputLogicalPos.y
+    );
+    this.nameInput.size(inputWidth);
     this.nameInput.attribute("placeholder", "Nome Pilota");
     this.styleInput(this.nameInput);
 
     this.playButton = this.p.createButton("START");
-    this.playButton.position(buttonLogicalPos.x, buttonLogicalPos.y);
+    this.playButton.position(
+      buttonLogicalPos.x - buttonWidth / 2,
+      buttonLogicalPos.y
+    );
+    this.playButton.size(buttonWidth);
     this.styleButton(this.playButton);
     this.playButton.mousePressed(() => {
       if (this.nameInput) {

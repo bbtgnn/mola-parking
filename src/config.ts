@@ -14,13 +14,13 @@ export interface GameConfig {
 
 export const config: GameConfig = {
   development: import.meta.env.DEV,
-  skip_home_if_dev: true,
+  skip_home_if_dev: false,
   debug_mode: import.meta.env.DEV,
   disable_audio_in_dev: true, // Set to false to enable audio in development
   show_dev_ui: import.meta.env.DEV,
   auto_start_level: import.meta.env.DEV ? 1 : undefined,
   // Color configuration
-  game_background_color: [55, 0, 0], // Dark red for game area
+  game_background_color: [0, 0, 0], // Dark red for game area
   letterbox_color: [0, 0, 255], // Blue for letterbox/pillarbox areas
   // Layout configuration
   min_margin_pixels: 20, // Minimum margin around game area in pixels

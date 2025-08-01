@@ -119,7 +119,10 @@ export class GameLogicManager {
     }
 
     if (this.gameState.isInMenu()) {
+      // Apply viewport transformation for menu (uses logical coordinates)
+      this.renderer.applyGameTransform();
       this.renderer.drawMenu();
+      this.renderer.resetTransform();
       return;
     }
 

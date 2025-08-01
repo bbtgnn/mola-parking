@@ -30,12 +30,12 @@ export class Renderer {
   // Main rendering methods
   public drawMenu(): void {
     this.p.fill(255, 255, 0);
-    this.p.stroke(255, 255, 0);
-    this.p.strokeWeight(2);
+    this.p.noStroke();
+    this.p.textAlign(this.p.CENTER);
     this.p.textSize(60);
-    this.p.textAlign(this.p.CENTER, this.p.CENTER);
+
     this.p.text(
-      "MOLESTO",
+      "MOL-E-STO",
       this.viewport.logicalWidth / 2,
       this.viewport.logicalHeight / 2 - 150
     );
@@ -49,38 +49,20 @@ export class Renderer {
       this.viewport.logicalHeight / 2 - 100
     );
 
-    this.p.fill(255, 255, 0);
-    this.p.textSize(18);
-    this.p.text(
-      "REGOLE DEL GIOOCO ",
-      this.viewport.logicalWidth / 2,
-      this.viewport.logicalHeight / 2 - 70
-    );
     this.p.textSize(15);
+    this.p.fill(255, 255, 0);
+    const rulesText =
+      "REGOLE DEL GIOCO\n" +
+      "-\n" +
+      "OBBIETTIVO: Parcheggia nel posto GIALLO\n" +
+      "Evita i parcheggi ROSSI (sono finti!)\n" +
+      "Schiva barche e auto nemiche\n" +
+      "Usa le frecce per muoverti\n" +
+      "SOLO CHI VINCE PUO DECIDERE!";
     this.p.text(
-      "OBBIETTIVO: Parcheggia nel posto GIALLO",
+      rulesText,
       this.viewport.logicalWidth / 2,
       this.viewport.logicalHeight / 2 - 50
-    );
-    this.p.text(
-      "Evita i parcheggi ROSSI (sono finti!)",
-      this.viewport.logicalWidth / 2,
-      this.viewport.logicalHeight / 2 - 30
-    );
-    this.p.text(
-      "Schiva barche e auto nemiche",
-      this.viewport.logicalWidth / 2,
-      this.viewport.logicalHeight / 2 - 10
-    );
-    this.p.text(
-      "Usa le frecce per muoverti",
-      this.viewport.logicalWidth / 2,
-      this.viewport.logicalHeight / 2 + 10
-    );
-    this.p.text(
-      "SOLO CHI VINCE PUO DECIDERE!",
-      this.viewport.logicalWidth / 2,
-      this.viewport.logicalHeight / 2 + 35
     );
   }
 
