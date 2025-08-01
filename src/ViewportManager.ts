@@ -1,10 +1,10 @@
 import type p5 from "p5";
 
 export class ViewportManager {
-  // Logical (game) dimensions - fixed aspect ratio
+  // Logical (game) dimensions - fixed 4:3 aspect ratio
   public readonly logicalWidth = 1000;
-  public readonly logicalHeight = 700;
-  public readonly aspectRatio = this.logicalWidth / this.logicalHeight; // ~1.43
+  public readonly logicalHeight = 750; // 1000 ÷ 750 = 4:3 ratio
+  public readonly aspectRatio = this.logicalWidth / this.logicalHeight; // 1.33 (4:3)
 
   // Actual screen dimensions
   public actualWidth: number = 0;
