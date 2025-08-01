@@ -106,7 +106,8 @@ export class GameLogicManager {
   }
 
   public render(): void {
-    this.p.background(0);
+    // Background is now handled by ViewportManager in Game.ts
+    // this.p.background(0); // Removed - conflicts with custom colors
 
     // Don't render until setup is complete
     if (!this.setupComplete) {

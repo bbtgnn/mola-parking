@@ -1,4 +1,5 @@
 import type p5 from "p5";
+import { config } from "./config";
 
 export class ViewportManager {
   // Logical (game) dimensions - fixed 4:3 aspect ratio
@@ -100,11 +101,14 @@ export class ViewportManager {
     this.p.pop();
   }
 
-  // Draw letterbox/pillarbox bars
+  // Draw letterbox/pillarbox bars and game background
   public drawLetterbox(): void {
     this.p.push();
-    this.p.fill(0); // Black bars
     this.p.noStroke();
+
+    // Draw letterbox/pillarbox bars with configured color
+    const [lr, lg, lb] = config.letterbox_color;
+    this.p.fill(lr, lg, lb);
 
     // Horizontal letterbox bars (top and bottom)
     if (this.offsetY > 0) {
@@ -127,6 +131,26 @@ export class ViewportManager {
         this.actualHeight
       ); // Right bar
     }
+
+    this.p.pop();
+  }
+
+  // Draw game area background
+  public drawGameBackground(): void {
+    this.p.push();
+
+    // Draw game background with configured color
+    const [gr, gg, gb] = config.game_background_color;
+    this.p.fill(gr, gg, gb);
+    this.p.noStroke();
+
+    // Draw game area background
+    this.p.rect(
+      this.offsetX,
+      this.offsetY,
+      this.scaledWidth,
+      this.scaledHeight
+    );
 
     this.p.pop();
   }

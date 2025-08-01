@@ -102,6 +102,9 @@ export class Game {
     // Draw letterbox/pillarbox background first
     this.viewport.drawLetterbox();
 
+    // Draw game area background
+    this.viewport.drawGameBackground();
+
     // Apply viewport transformation and render game
     this.gameLogic.render();
   }

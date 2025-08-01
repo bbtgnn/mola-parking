@@ -299,19 +299,6 @@ export class Renderer {
     this.p.text("MOL-E-STO\nARCADE", this.viewport.logicalWidth - 20, 25);
   }
 
-  private calculateBPM(): number {
-    // Linear interpolation from 60 BPM (level 1) to 210 BPM (level 10)
-    const minBPM = 60;
-    const maxBPM = 210;
-    const minLevel = 1;
-    const maxLevel = 10;
-
-    const level = Math.min(Math.max(this.gameState.level, minLevel), maxLevel);
-    const progress = (level - minLevel) / (maxLevel - minLevel);
-
-    return Math.round(minBPM + (maxBPM - minBPM) * progress);
-  }
-
   public drawDevUI(): void {
     if (!config.show_dev_ui) return;
 
