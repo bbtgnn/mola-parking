@@ -40,34 +40,48 @@ export class GameLogicManager {
   }
 
   public async setupGame(): Promise<void> {
+    console.log("🔧 Starting game setup...");
+
     // Setup input handlers
     this.inputManager.setupKeyHandlers();
+    console.log("🔧 Input handlers setup complete");
 
     // Development mode: skip setup screen
     if (config.development && config.skip_home_if_dev) {
+      console.log("🔧 Development mode detected, starting dev mode...");
       await this.startGameInDevMode();
+      console.log("🔧 Dev mode setup complete");
     } else {
       // Ensure game state is set to menu for production mode
       this.gameState.setGameState("menu");
+      console.log("🔧 Production mode, set to menu");
     }
 
     this.setupComplete = true;
+    console.log("🔧 Setup complete flag set to true");
   }
 
   private async startGameInDevMode(): Promise<void> {
+    console.log("🚀 Starting dev mode initialization...");
+
     // Auto-start with default player name
     this.gameState.setPlayerName("Developer");
     this.gameState.setGameState("playing");
+    console.log("🚀 Game state set to playing");
 
     // Initialize audio
+    console.log("🚀 Initializing audio...");
     await this.audioManager.initializeAudio();
+    console.log("🚀 Audio initialized");
     this.audioManager.playMusic();
+    console.log("🚀 Music started");
 
     // Start the specified level or level 1
     const startLevel = config.auto_start_level || 1;
     this.gameState.level = startLevel;
     this.levelGenerator.resetCar();
     this.levelGenerator.generateLevel(startLevel);
+    console.log("🚀 Level generated:", startLevel);
   }
 
   public async startGame(playerName: string): Promise<void> {
