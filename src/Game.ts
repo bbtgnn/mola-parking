@@ -22,7 +22,7 @@ export class Game {
   private gameLogic: GameLogicManager;
   private uiManager: UIManager;
   private viewport: ViewportManager;
-  private monacoFont: p5.Font | null = null;
+  private font: p5.Font | null = null;
 
   constructor(p: p5) {
     this.p = p;
@@ -86,14 +86,14 @@ export class Game {
 
     // Setup text alignment and font
     this.p.textAlign(this.p.CENTER);
-    if (this.monacoFont) {
-      this.p.textFont(this.monacoFont);
+    if (this.font) {
+      this.p.textFont(this.font);
     }
   }
 
   public preload(): void {
     // Load the Monaco font from the public folder
-    this.monacoFont = this.p.loadFont("/Monaco.ttf");
+    this.font = this.p.loadFont("/ARCADECLASSIC.TTF");
   }
 
   public draw(): void {
