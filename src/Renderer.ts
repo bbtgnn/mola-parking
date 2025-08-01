@@ -264,8 +264,10 @@ export class Renderer {
   }
 
   public drawUI(): void {
-    this.p.fill(50);
-    this.p.rect(0, 0, this.viewport.logicalWidth, 60);
+    // Background
+    this.p.noStroke();
+    this.p.fill(...config.letterbox_color);
+    this.p.rect(0, 0, this.viewport.logicalWidth, this.uiFontSize * 3);
 
     this.p.noStroke();
     this.p.fill(this.uiFontColor);
