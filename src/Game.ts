@@ -100,6 +100,36 @@ export class Game {
   public preload(): void {
     // Load the Monaco font from the public folder
     this.font = this.p.loadFont("/PressStart2P-vaV7.ttf");
+
+    // Load the castle sprite - try PNG first as SVG can be problematic
+    this.p.loadImage(
+      "/sprites/castle.png",
+      (img) => {
+        // Success callback - PNG image loaded successfully
+        console.log("✅ Castle PNG image loaded successfully:", img);
+        this.renderer.setCastleImage(img);
+      },
+      (err) => {
+        console.warn("⚠️ PNG failed, trying SVG:", err);
+        // Fallback to SVG if PNG doesn't exist
+        this.p.loadImage(
+          "/sprites/castle.svg",
+          (img) => {
+            // Success callback - SVG image loaded successfully
+            console.log("✅ Castle SVG image loaded successfully:", img);
+            this.renderer.setCastleImage(img);
+          },
+          (err) => {
+            // Error callback - both formats failed to load
+            console.error(
+              "❌ Failed to load castle image (both PNG and SVG):",
+              err
+            );
+            this.renderer.setCastleImage(null);
+          }
+        );
+      }
+    );
   }
 
   public draw(): void {

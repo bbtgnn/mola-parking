@@ -10,6 +10,7 @@ export class Renderer {
   private gameState: GameStateManager;
   private viewport: ViewportManager;
   private uiManager: UIManager;
+  private castleImage: p5.Image | null = null;
 
   private uiFontSize: number = 20;
   private uiFontColor: number = 255;
@@ -24,6 +25,11 @@ export class Renderer {
     this.gameState = gameState;
     this.viewport = viewport;
     this.uiManager = uiManager;
+  }
+
+  // Method to set the castle image after it's loaded
+  public setCastleImage(image: p5.Image | null): void {
+    this.castleImage = image;
   }
 
   // Viewport transformation methods
@@ -86,78 +92,42 @@ export class Renderer {
   }
 
   public drawCastle(): void {
+    // Position castle in perfect center of the playable game area (excluding toolbar)
     let cx = this.viewport.logicalWidth / 2;
-    let cy = this.viewport.logicalHeight / 2 - 50;
+    let gameAreaHeight = this.viewport.logicalHeight - this.topbarHeight;
+    let cy = this.topbarHeight + gameAreaHeight / 2;
 
-    this.p.push();
-    this.p.translate(cx, cy);
-    this.p.noStroke();
+    if (this.castleImage) {
+      // Use the SVG image (300x100)
+      this.p.push();
 
-    this.p.fill(64);
-    this.p.rect(-70, -20, 140, 60);
+      // Scale down the castle to fit better in the game (original is 300x100)
+      const scale = 1; // Adjust this to make castle smaller/larger
+      const scaledW = 300 * scale; // 180
+      const scaledH = 100 * scale; // 60
 
-    this.p.fill(96);
-    this.p.rect(-65, -15, 20, 10);
-    this.p.rect(-40, -15, 20, 10);
-    this.p.rect(-15, -15, 20, 10);
-    this.p.rect(10, -15, 20, 10);
-    this.p.rect(35, -15, 20, 10);
+      // Draw the image centered at the castle position
+      this.p.imageMode(this.p.CENTER);
+      this.p.image(this.castleImage, cx, cy, scaledW, scaledH);
+      this.p.pop();
+    } else {
+      // Fallback: draw a simple rectangle if image fails to load
+      this.p.push();
+      this.p.translate(cx, cy);
+      this.p.noStroke();
+      this.p.fill(128, 128, 128);
+      this.p.rectMode(this.p.CENTER);
+      this.p.rect(0, 0, 180, 60);
+      this.p.fill(64, 64, 64);
+      this.p.rect(0, 0, 160, 40);
 
-    this.p.fill(80);
-    this.p.rect(-90, -50, 30, 70);
-    this.p.fill(112);
-    this.p.rect(-85, -45, 8, 8);
-    this.p.rect(-75, -45, 8, 8);
-    this.p.rect(-85, -30, 8, 8);
-    this.p.rect(-75, -30, 8, 8);
-
-    this.p.fill(96);
-    this.p.rect(-90, -58, 6, 8);
-    this.p.rect(-78, -58, 6, 8);
-    this.p.rect(-66, -58, 6, 8);
-
-    this.p.fill(80);
-    this.p.rect(60, -50, 30, 70);
-    this.p.fill(112);
-    this.p.rect(65, -45, 8, 8);
-    this.p.rect(75, -45, 8, 8);
-    this.p.rect(65, -30, 8, 8);
-    this.p.rect(75, -30, 8, 8);
-
-    this.p.fill(96);
-    this.p.rect(60, -58, 6, 8);
-    this.p.rect(72, -58, 6, 8);
-    this.p.rect(84, -58, 6, 8);
-
-    this.p.fill(128);
-    this.p.rect(-25, -70, 50, 90);
-    this.p.fill(160);
-    this.p.rect(-20, -65, 8, 8);
-    this.p.rect(-8, -65, 8, 8);
-    this.p.rect(4, -65, 8, 8);
-    this.p.rect(16, -65, 8, 8);
-    this.p.fill(96);
-    this.p.rect(-20, -50, 8, 8);
-    this.p.rect(16, -50, 8, 8);
-    this.p.rect(-20, -35, 8, 8);
-    this.p.rect(16, -35, 8, 8);
-
-    this.p.fill(144);
-    this.p.rect(-25, -78, 8, 8);
-    this.p.rect(-12, -78, 8, 8);
-    this.p.rect(1, -78, 8, 8);
-    this.p.rect(14, -78, 8, 8);
-
-    this.p.fill(32);
-    this.p.rect(-12, 10, 24, 30);
-    this.p.fill(48);
-    this.p.rect(-10, 15, 4, 4);
-    this.p.rect(-2, 15, 4, 4);
-    this.p.rect(6, 15, 4, 4);
-
-    this.p.fill(64, 32, 0);
-    this.p.rect(-15, 35, 30, 8);
-    this.p.pop();
+      // Debug text to show fallback is being used
+      this.p.fill(255, 255, 255);
+      this.p.textAlign(this.p.CENTER, this.p.CENTER);
+      this.p.textSize(12);
+      this.p.text("Castle Loading...", 0, 0);
+      this.p.pop();
+    }
   }
 
   public drawFakeParkingSpots(): void {
