@@ -12,6 +12,12 @@ export class LevelGenerator {
   private readonly CAR_START_W = 48;
   private readonly CAR_START_H = 24;
 
+  // Playable area constants (excluding toolbar and margins)
+  private readonly TOOLBAR_HEIGHT = 60;
+  private readonly AREA_MARGIN = 50;
+  private readonly MIN_Y = this.TOOLBAR_HEIGHT + this.AREA_MARGIN;
+  private readonly MAX_Y = 700;
+
   constructor(p: p5, gameState: GameStateManager) {
     this.p = p;
     this.gameState = gameState;
@@ -37,11 +43,11 @@ export class LevelGenerator {
       this.gameState.boats.push(this.generateBoat());
     }
 
-    // Generate enemies
+    // Generate enemies (spread across full game area)
     for (let i = 0; i < 2; i++) {
       this.gameState.enemies.push({
         x: -150 * (i + 1),
-        y: 150 + i * 200,
+        y: this.p.random(this.MIN_Y, this.MAX_Y), // Use full available height
         w: 48,
         h: 24,
         speed: 1.2 + level * 0.1,
@@ -166,26 +172,20 @@ export class LevelGenerator {
         break;
     }
 
-    // Calculate available game area (excluding toolbar and margins)
-    const toolbarHeight = 60; // uiFontSize * 3
-    const margin = 50; // Safety margin from edges
-    const minY = toolbarHeight + margin; // Start below toolbar with margin
-    const maxY = 700; // Stay above bottom edge
-
     // Keep trying to place obstacle until we find a valid position
     do {
       switch (type) {
         case "palm":
           x = this.p.random(200, 800);
-          y = this.p.random(minY, maxY);
+          y = this.p.random(this.MIN_Y, this.MAX_Y);
           break;
         case "lamp":
           x = this.p.random(150, 850);
-          y = this.p.random(minY, maxY);
+          y = this.p.random(this.MIN_Y, this.MAX_Y);
           break;
         case "car":
           x = this.p.random(100, 900);
-          y = this.p.random(minY, maxY);
+          y = this.p.random(this.MIN_Y, this.MAX_Y);
           break;
       }
       attempts++;
@@ -317,7 +317,7 @@ export class LevelGenerator {
   private generateBoat(): Boat {
     return {
       x: this.p.random(-200, -100),
-      y: this.p.random(50, 150),
+      y: this.p.random(this.MIN_Y, this.MAX_Y), // Use full available height
       w: 60,
       h: 30,
       speed: this.p.random(0.8, 1.5),
