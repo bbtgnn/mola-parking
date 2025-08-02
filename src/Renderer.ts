@@ -264,33 +264,18 @@ export class Renderer {
     }
   }
 
+  private topbarHeight = this.uiFontSize * 3;
+
   public drawUI(): void {
     // Background
     this.p.noStroke();
     this.p.fill(...config.letterbox_color);
-    this.p.rect(0, 0, this.viewport.logicalWidth, this.uiFontSize * 3);
+    this.p.rect(0, 0, this.viewport.logicalWidth, this.topbarHeight);
 
     this.p.noStroke();
     this.p.fill(this.uiFontColor);
     this.p.textSize(this.uiFontSize);
     this.p.textLeading(this.uiFontSize * 1.5);
-
-    // // Development mode indicator
-    // if (config.development) {
-    //   this.p.fill(255, 0, 0);
-    //   this.p.textSize(12);
-    //   this.p.text("DEV MODE", 20, 55);
-    // }
-
-    // // BPM indicator
-    // this.p.fill(0, 255, 255);
-    // this.p.textSize(14);
-    // this.p.textAlign(this.p.CENTER);
-    // this.p.text(
-    //   "BPM: " + this.calculateBPM(),
-    //   this.viewport.logicalWidth / 2,
-    //   25
-    // );
 
     this.p.textAlign(this.p.LEFT);
     this.p.text(
@@ -421,28 +406,28 @@ export class Renderer {
 
   public drawMessages(): void {
     this.p.textAlign(this.p.CENTER);
+    const messageFontSize = 24;
+
     if (this.gameState.win && this.gameState.level <= 10) {
       this.p.fill(0, 255, 0);
-      this.p.stroke(0, 255, 0);
-      this.p.strokeWeight(2);
-      this.p.textSize(24);
+      this.p.textSize(messageFontSize);
       this.p.text(
         "PARCHEGGIO RIUSCITO! Premi N",
         this.viewport.logicalWidth / 2,
         100
       );
     }
+
     if (this.gameState.isGameComplete()) {
       this.p.fill(255, 255, 0);
-      this.p.stroke(255, 255, 0);
-      this.p.strokeWeight(2);
+
       this.p.textSize(32);
       this.p.text(
         "VITTORIA TOTALE!",
         this.viewport.logicalWidth / 2,
         this.viewport.logicalHeight / 2
       );
-      this.p.noStroke();
+
       this.p.textSize(20);
       this.p.text(
         "Complimenti " + this.gameState.playerName + "!",
@@ -450,11 +435,10 @@ export class Renderer {
         this.viewport.logicalHeight / 2 + 40
       );
     }
+
     if (this.gameState.gameOver) {
       this.p.fill(255, 0, 0);
-      this.p.stroke(255, 0, 0);
-      this.p.strokeWeight(2);
-      this.p.textSize(24);
+      this.p.textSize(messageFontSize);
       this.p.text("GAME OVER! Premi R", this.viewport.logicalWidth / 2, 100);
     }
   }
