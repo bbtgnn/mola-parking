@@ -6,6 +6,12 @@ export class LevelGenerator {
   private p: p5;
   private gameState: GameStateManager;
 
+  // Car starting position constants
+  private readonly CAR_START_X = 120;
+  private readonly CAR_START_Y = 550;
+  private readonly CAR_START_W = 48;
+  private readonly CAR_START_H = 24;
+
   constructor(p: p5, gameState: GameStateManager) {
     this.p = p;
     this.gameState = gameState;
@@ -46,17 +52,17 @@ export class LevelGenerator {
 
   private generateParkingSpot(level: number): ParkingSpot {
     const spots = [
-      { x: 850, y: 150 },
-      { x: 850, y: 250 },
+      { x: 850, y: 200 },
       { x: 850, y: 350 },
-      { x: 750, y: 120 },
-      { x: 750, y: 220 },
-      { x: 750, y: 320 },
-      { x: 650, y: 150 },
-      { x: 650, y: 250 },
+      { x: 850, y: 500 },
+      { x: 750, y: 150 },
+      { x: 750, y: 300 },
+      { x: 750, y: 450 },
+      { x: 650, y: 200 },
       { x: 650, y: 350 },
-      { x: 550, y: 180 },
-      { x: 550, y: 280 },
+      { x: 650, y: 500 },
+      { x: 550, y: 250 },
+      { x: 550, y: 400 },
     ];
 
     const spotIndex = (level - 1) % spots.length;
@@ -74,14 +80,14 @@ export class LevelGenerator {
     this.gameState.fakeParkingSpots = [];
 
     const fakeSpotTemplates = [
-      { x: 850, y: 200, angle: 0.3 },
-      { x: 750, y: 180, angle: -0.2 },
-      { x: 650, y: 200, angle: 0.4 },
-      { x: 550, y: 220, angle: -0.3 },
-      { x: 800, y: 300, angle: 0.1 },
-      { x: 700, y: 280, angle: -0.4 },
-      { x: 600, y: 300, angle: 0.2 },
-      { x: 500, y: 320, angle: -0.1 },
+      { x: 850, y: 250, angle: 0.3 },
+      { x: 750, y: 200, angle: -0.2 },
+      { x: 650, y: 300, angle: 0.4 },
+      { x: 550, y: 350, angle: -0.3 },
+      { x: 800, y: 400, angle: 0.1 },
+      { x: 700, y: 380, angle: -0.4 },
+      { x: 600, y: 450, angle: 0.2 },
+      { x: 500, y: 420, angle: -0.1 },
     ];
 
     // Add fake spots based on level difficulty, ensuring no overlap with real parking spot
@@ -90,7 +96,7 @@ export class LevelGenerator {
       const template = fakeSpotTemplates[i];
 
       // Check if this fake spot would overlap with the real parking spot
-      const wouldOverlap =
+      const wouldOverlapParking =
         this.gameState.parkingSpot &&
         this.rectanglesOverlap(
           template.x,
@@ -103,8 +109,20 @@ export class LevelGenerator {
           this.gameState.parkingSpot.h
         );
 
-      // Only add the fake spot if it doesn't overlap with the real parking spot
-      if (!wouldOverlap) {
+      // Check if this fake spot would overlap with car's starting position
+      const wouldOverlapCar = this.rectanglesOverlap(
+        template.x,
+        template.y,
+        40,
+        20,
+        this.CAR_START_X,
+        this.CAR_START_Y,
+        this.CAR_START_W,
+        this.CAR_START_H
+      );
+
+      // Only add the fake spot if it doesn't overlap with real parking spot or car start
+      if (!wouldOverlapParking && !wouldOverlapCar) {
         this.gameState.fakeParkingSpots.push({
           x: template.x,
           y: template.y,
@@ -148,20 +166,26 @@ export class LevelGenerator {
         break;
     }
 
+    // Calculate available game area (excluding toolbar and margins)
+    const toolbarHeight = 60; // uiFontSize * 3
+    const margin = 50; // Safety margin from edges
+    const minY = toolbarHeight + margin; // Start below toolbar with margin
+    const maxY = 700; // Stay above bottom edge
+
     // Keep trying to place obstacle until we find a valid position
     do {
       switch (type) {
         case "palm":
           x = this.p.random(200, 800);
-          y = this.p.random(100, 400);
+          y = this.p.random(minY, maxY);
           break;
         case "lamp":
           x = this.p.random(150, 850);
-          y = this.p.random(80, 450);
+          y = this.p.random(minY, maxY);
           break;
         case "car":
           x = this.p.random(100, 900);
-          y = this.p.random(120, 480);
+          y = this.p.random(minY, maxY);
           break;
       }
       attempts++;
@@ -239,6 +263,22 @@ export class LevelGenerator {
       }
     }
 
+    // Check overlap with car's starting position
+    if (
+      this.rectanglesOverlap(
+        x,
+        y,
+        w,
+        h,
+        this.CAR_START_X,
+        this.CAR_START_Y,
+        this.CAR_START_W,
+        this.CAR_START_H
+      )
+    ) {
+      return true;
+    }
+
     return false;
   }
 
@@ -292,10 +332,10 @@ export class LevelGenerator {
 
   public resetCar(): void {
     this.gameState.car = {
-      x: 120,
-      y: 550,
-      w: 48,
-      h: 24,
+      x: this.CAR_START_X,
+      y: this.CAR_START_Y,
+      w: this.CAR_START_W,
+      h: this.CAR_START_H,
       speed: 2.5,
       angle: 0,
     };
