@@ -405,41 +405,65 @@ export class Renderer {
   }
 
   public drawMessages(): void {
-    this.p.textAlign(this.p.CENTER);
+    this.p.textAlign(this.p.CENTER, this.p.CENTER);
     const messageFontSize = 24;
 
+    // Calculate game area dimensions (excluding toolbar)
+    const gameAreaWidth = this.viewport.logicalWidth;
+    const gameAreaHeight = this.viewport.logicalHeight - this.topbarHeight;
+    const gameAreaTop = this.topbarHeight;
+    const gameAreaCenterY = gameAreaTop + gameAreaHeight / 2;
+
+    const drawOverlay = () => {
+      // Draw full-area light blue overlay background
+      const bg = config.game_background_color;
+      this.p.fill(bg[0], bg[1], bg[2], 150); // Light blue with 150/255 opacity
+      this.p.noStroke();
+      this.p.rectMode(this.p.CORNER);
+      this.p.rect(0, gameAreaTop, gameAreaWidth, gameAreaHeight);
+    };
+
     if (this.gameState.win && this.gameState.level <= 10) {
+      drawOverlay();
+      // Draw text
       this.p.fill(0, 255, 0);
       this.p.textSize(messageFontSize);
       this.p.text(
-        "PARCHEGGIO RIUSCITO! Premi N",
+        "PARCHEGGIO RIUSCITO!\nPremi [N] per il livello successivo",
         this.viewport.logicalWidth / 2,
-        100
+        gameAreaCenterY
       );
     }
 
     if (this.gameState.isGameComplete()) {
+      drawOverlay();
+      // Draw victory text
       this.p.fill(255, 255, 0);
-
       this.p.textSize(32);
       this.p.text(
         "VITTORIA TOTALE!",
         this.viewport.logicalWidth / 2,
-        this.viewport.logicalHeight / 2
+        gameAreaCenterY - 20
       );
 
       this.p.textSize(20);
       this.p.text(
         "Complimenti " + this.gameState.playerName + "!",
         this.viewport.logicalWidth / 2,
-        this.viewport.logicalHeight / 2 + 40
+        gameAreaCenterY + 20
       );
     }
 
     if (this.gameState.gameOver) {
+      drawOverlay();
+      // Draw game over text
       this.p.fill(255, 0, 0);
       this.p.textSize(messageFontSize);
-      this.p.text("GAME OVER! Premi R", this.viewport.logicalWidth / 2, 100);
+      this.p.text(
+        "GAME OVER!\nPremi [R] per riprovare il livello",
+        this.viewport.logicalWidth / 2,
+        gameAreaCenterY
+      );
     }
   }
 
