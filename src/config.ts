@@ -8,6 +8,7 @@ export interface GameConfig {
   show_dev_ui: boolean;
   auto_start_level?: number;
   // Game configuration
+  max_levels: number; // Maximum number of levels in the game
   difficulty: DifficultyConfig; // Progressive difficulty configuration
   // Color configuration
   game_background_color: [number, number, number]; // RGB values for game area background
