@@ -100,9 +100,14 @@ export class InputManager {
     if (
       (this.p.key === "n" || this.p.key === "N") &&
       this.gameState.win &&
-      this.gameState.level < 11
+      this.gameState.level < config.max_levels + 1
     ) {
       this.nextLevel();
+    }
+
+    // Restart entire game on 'Enter' key when game is complete
+    if (this.p.keyCode === this.p.ENTER && this.gameState.isGameComplete()) {
+      this.restartGame();
     }
   }
 
@@ -118,6 +123,34 @@ export class InputManager {
 
     // Update audio BPM for the new level
     this.audioManager.setLevel(this.gameState.level);
+  }
+
+  private restartGame(): void {
+    // Reset the entire game back to menu state
+    this.gameState.resetGame();
+    this.levelGenerator.resetCar();
+
+    // Stop music and reset audio
+    this.audioManager.stopMusic();
+
+    // Show the menu/start screen again
+    this.uiManager.createProductionUI(async (playerName: string) => {
+      this.gameState.setPlayerName(playerName);
+      this.gameState.setGameState("playing");
+
+      // Initialize audio
+      await this.audioManager.initializeAudio();
+      this.audioManager.playMusic();
+
+      // Start level 1
+      this.gameState.level = 1;
+      this.levelGenerator.resetCar();
+      this.levelGenerator.generateLevel(1);
+      this.audioManager.setLevel(1);
+
+      // Remove UI after starting
+      this.uiManager.removeUI();
+    });
   }
 
   public isArrowKeyPressed(): boolean {

@@ -2,6 +2,7 @@ import type p5 from "p5";
 import type { Car, Obstacle, Enemy, Boat } from "./types";
 import { GameStateManager } from "./GameState";
 import { AudioManager } from "./AudioManager";
+import { config } from "./config";
 
 export class CollisionManager {
   private p: p5;
@@ -103,7 +104,7 @@ export class CollisionManager {
     return (
       !this.gameState.gameOver &&
       !this.gameState.win &&
-      this.gameState.level <= 10
+      this.gameState.level <= config.max_levels
     );
   }
 }

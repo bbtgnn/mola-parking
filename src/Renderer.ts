@@ -393,7 +393,7 @@ export class Renderer {
       this.p.rect(0, gameAreaTop, gameAreaWidth, gameAreaHeight);
     };
 
-    if (this.gameState.win && this.gameState.level <= 10) {
+    if (this.gameState.win && this.gameState.level <= config.max_levels) {
       drawOverlay();
       // Draw text
       this.p.fill(0, 255, 0);
@@ -413,14 +413,22 @@ export class Renderer {
       this.p.text(
         "VITTORIA TOTALE!",
         this.viewport.logicalWidth / 2,
-        gameAreaCenterY - 20
+        gameAreaCenterY - 40
       );
 
       this.p.textSize(20);
       this.p.text(
         "Complimenti " + this.gameState.playerName + "!",
         this.viewport.logicalWidth / 2,
-        gameAreaCenterY + 20
+        gameAreaCenterY
+      );
+
+      this.p.textSize(18);
+      this.p.fill(0, 255, 0);
+      this.p.text(
+        "Premi [INVIO] per rigiocare",
+        this.viewport.logicalWidth / 2,
+        gameAreaCenterY + 40
       );
     }
 

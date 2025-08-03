@@ -7,6 +7,7 @@ import type {
   FakeParkingSpot,
   GameState,
 } from "./types";
+import { config } from "./config";
 
 export class GameStateManager {
   // Game objects
@@ -64,9 +65,9 @@ export class GameStateManager {
     this.playerName = name;
   }
 
-  // Check if game is complete (all 10 levels)
+  // Check if game is complete (all levels)
   public isGameComplete(): boolean {
-    return this.level > 10;
+    return this.level > config.max_levels;
   }
 
   // Check if currently in menu

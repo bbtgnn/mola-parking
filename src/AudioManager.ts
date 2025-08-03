@@ -32,15 +32,20 @@ export class AudioManager {
   }
 
   private calculateBPM(): number {
-    // Linear interpolation from 60 BPM (level 1) to 210 BPM (level 10)
+    // Linear interpolation from 60 BPM (level 1) to 210 BPM (max level)
     const minBPM = 60;
     const maxBPM = 210;
     const minLevel = 1;
-    const maxLevel = 10;
+    const maxLevel = config.max_levels;
 
     const level = Math.min(Math.max(this.currentLevel, minLevel), maxLevel);
-    const progress = (level - minLevel) / (maxLevel - minLevel);
 
+    // Handle case where there's only 1 level (avoid division by zero)
+    if (maxLevel === minLevel) {
+      return minBPM; // Use minimum BPM for single-level games
+    }
+
+    const progress = (level - minLevel) / (maxLevel - minLevel);
     return Math.round(minBPM + (maxBPM - minBPM) * progress);
   }
 
