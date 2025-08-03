@@ -18,7 +18,7 @@ export interface GameConfig {
 }
 
 export const config: GameConfig = {
-  development: true, // PRODUCTION: Always false for production build
+  development: false, // PRODUCTION: Always false for production build
   skip_home_if_dev: false, // PRODUCTION: Always show intro screen
   debug_mode: false, // PRODUCTION: Disable debug mode
   disable_audio_in_dev: false, // PRODUCTION: Enable audio
