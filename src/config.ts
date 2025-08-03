@@ -18,6 +18,7 @@ export interface GameConfig {
 }
 
 export const config: GameConfig = {
+  development: true, // PRODUCTION: Always false for production build
   skip_home_if_dev: false, // PRODUCTION: Always show intro screen
   debug_mode: false, // PRODUCTION: Disable debug mode
   disable_audio_in_dev: false, // PRODUCTION: Enable audio
@@ -29,25 +30,26 @@ export const config: GameConfig = {
   difficulty: {
     // Base values for level 1
     base: {
-      obstacles: 2, // Starting number of obstacles
+      obstacles: 3, // Starting number of obstacles (harder from start)
       enemies: 1, // Starting number of enemies
-      safeAreaPadding: 25, // Starting safe area padding (pixels)
-      enemySpeed: 0.8, // Starting enemy speed multiplier
+      safeAreaPadding: 22, // Starting safe area padding (tighter from start)
+      enemySpeed: 0.9, // Starting enemy speed multiplier (faster from start)
       enemyDirectionRandom: false, // Don't randomize direction at start
     },
     // Auto-scaling formulas per level
     scaling: {
-      obstacleGrowth: 3, // +0.5 obstacles per level
-      enemyGrowth: 0.3, // +0.3 enemies per level
-      paddingReduction: 2, // -2px safe area per level (minimum 5px)
-      speedIncrease: 0.1, // +0.1 speed multiplier per level
-      randomDirectionLevel: 3, // Startas randomizing direction from level 3
+      obstacleGrowth: 1.2, // +1.2 obstacles per level (aggressive)
+      enemyGrowth: 0.5, // +0.5 enemies per level (more enemies faster)
+      paddingReduction: 3, // -3px safe area per level (tighter faster)
+      speedIncrease: 0.15, // +0.15 speed multiplier per level (faster acceleration)
+      randomDirectionLevel: 2, // Start randomizing direction from level 2 (earlier chaos)
     },
     // Manual overrides for specific levels (for fine-tuning)
     overrides: {
-      5: { obstacles: 6, enemies: 3 }, // Level 5: exactly 6 obstacles, 3 enemies
-      8: { safeAreaPadding: 8, enemySpeed: 2.2 }, // Level 8: very tight safe areas, fast enemies
-      10: { obstacles: 10, enemies: 5, safeAreaPadding: 5, enemySpeed: 2.5 }, // Final boss level
+      5: { obstacles: 8, enemies: 4, safeAreaPadding: 12 }, // Level 5: mid-game spike
+      7: { obstacles: 12, enemies: 5, enemySpeed: 1.8 }, // Level 7: pre-boss difficulty spike
+      8: { safeAreaPadding: 6, enemySpeed: 2.4 }, // Level 8: very tight areas, fast enemies
+      10: { obstacles: 18, enemies: 8, safeAreaPadding: 3, enemySpeed: 3.0 }, // Final boss: INSANE
     },
   },
   // Color configuration
