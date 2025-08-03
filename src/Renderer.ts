@@ -294,7 +294,16 @@ export class Renderer {
     yPos += lineHeight;
 
     // Game objects count
-    this.p.text(`Obstacles: ${this.gameState.obstacles.length}`, 20, yPos);
+    const pathBlockers = this.gameState.obstacles.filter(
+      (obs) => obs.col.toString() === this.p.color(120, 60, 20).toString()
+    ).length;
+    const regularObstacles = this.gameState.obstacles.length - pathBlockers;
+
+    this.p.text(
+      `Obstacles: ${this.gameState.obstacles.length} (${regularObstacles} + ${pathBlockers} path)`,
+      20,
+      yPos
+    );
     yPos += lineHeight;
     this.p.text(`Enemies: ${this.gameState.enemies.length}`, 20, yPos);
     yPos += lineHeight;

@@ -64,8 +64,10 @@ export class DifficultyManager {
 
     // Debug output for development
     if (config.development) {
+      const pathObstacles = Math.max(0, Math.floor((level - 1) * 1.2)); // Same formula as in LevelGenerator
       console.log(`🎯 Level ${level} Difficulty:`, {
         obstacles: difficulty.obstacles,
+        pathBlockers: pathObstacles,
         enemies: difficulty.enemies,
         safeAreaPadding: difficulty.safeAreaPadding,
         enemySpeed: difficulty.enemySpeed.toFixed(1),

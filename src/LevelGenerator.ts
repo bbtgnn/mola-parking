@@ -46,6 +46,9 @@ export class LevelGenerator {
       );
     }
 
+    // Generate path-blocking obstacles (increases with difficulty)
+    this.generatePathObstacles(level, difficulty.safeAreaPadding);
+
     // Generate boats
     for (let i = 0; i < 3; i++) {
       this.gameState.boats.push(this.generateBoat());
@@ -364,6 +367,69 @@ export class LevelGenerator {
       speed: speed,
       col: this.p.color(255, 50, 50),
     };
+  }
+
+  /**
+   * Generate obstacles specifically in the path between car start and parking spot
+   * Number increases with level to make navigation progressively harder
+   */
+  private generatePathObstacles(level: number, safeAreaPadding: number): void {
+    if (!this.gameState.parkingSpot) return;
+
+    // Calculate number of path obstacles based on level (more as difficulty increases)
+    const pathObstacleCount = Math.max(0, Math.floor((level - 1) * 1.2)); // 0 at level 1, then increases aggressively
+
+    if (pathObstacleCount === 0) return;
+
+    // Define the corridor between car start and parking spot
+    const carX = this.CAR_START_X;
+    const carY = this.CAR_START_Y;
+    const parkingX = this.gameState.parkingSpot.x;
+    const parkingY = this.gameState.parkingSpot.y;
+
+    // Path area (corridor between start and parking spot)
+    const pathStartX = carX + 80; // Start a bit away from car
+    const pathEndX = parkingX - 80; // End a bit before parking spot
+    const pathTopY = Math.min(carY, parkingY) - 80;
+    const pathBottomY = Math.max(carY, parkingY) + 80;
+
+    for (let i = 0; i < pathObstacleCount; i++) {
+      let attempts = 0;
+      const maxAttempts = 40;
+      let x: number, y: number;
+
+      do {
+        // Place obstacles in the path corridor, with bias toward center
+        const pathProgress = (i + 1) / (pathObstacleCount + 1); // 0 to 1
+        x =
+          this.p.lerp(pathStartX, pathEndX, pathProgress) +
+          this.p.random(-60, 60);
+        y = this.p.lerp(carY, parkingY, pathProgress) + this.p.random(-80, 80);
+
+        // Keep within bounds
+        x = this.p.constrain(x, pathStartX, pathEndX);
+        y = this.p.constrain(
+          y,
+          Math.max(pathTopY, this.MIN_Y),
+          Math.min(pathBottomY, this.MAX_Y)
+        );
+
+        attempts++;
+      } while (
+        this.checkObstacleOverlap(x, y, 42, 28, safeAreaPadding) &&
+        attempts < maxAttempts
+      );
+
+      // Add path obstacle (distinct color to show they're blocking the path)
+      this.gameState.obstacles.push({
+        x: x,
+        y: y,
+        w: 42,
+        h: 28,
+        col: this.p.color(120, 60, 20), // Dark brown - path blocker
+        type: "car", // Use car type but with different color
+      });
+    }
   }
 
   private generateBoat(): Boat {
