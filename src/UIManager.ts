@@ -45,24 +45,27 @@ export class UIManager {
   // Draw the text input using p5.js
   public drawTextInput(): void {
     if (!this.isInputActive) return;
+    this.p.noStroke();
 
     // Input box position and size (in logical coordinates) - moved further down
     const inputX = this.viewport.logicalWidth / 2;
-    const inputY = this.viewport.logicalHeight / 2 + 180;
+    let inputY = 0;
     const inputWidth = 300;
-    const inputHeight = 40;
 
     // Draw prompt above input box
+    let inputFontSize = 18;
+    inputY += inputFontSize;
     this.p.fill(0, 255, 0);
-    this.p.noStroke();
     this.p.textAlign(this.p.CENTER, this.p.CENTER);
-    this.p.textSize(18);
+    this.p.textSize(inputFontSize);
     this.p.text(
       "Inserisci il tuo nome e premi INVIO per iniziare",
       inputX,
-      inputY - 35
+      inputY
     );
 
+    let inputHeight = inputFontSize * 2;
+    inputY += inputHeight;
     // Draw input box background
     this.p.fill(20, 20, 20);
     this.p.stroke(0, 255, 0);

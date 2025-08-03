@@ -2,29 +2,37 @@ import type p5 from "p5";
 import { GameStateManager } from "./GameState";
 import { AudioManager } from "./AudioManager";
 import { ViewportManager } from "./ViewportManager";
+import { LevelGenerator } from "./LevelGenerator";
 
 export class MovementManager {
   private p: p5;
   private gameState: GameStateManager;
   private audioManager: AudioManager;
   private viewport: ViewportManager;
+  private levelGenerator: LevelGenerator;
 
   constructor(
     p: p5,
     gameState: GameStateManager,
     audioManager: AudioManager,
-    viewport: ViewportManager
+    viewport: ViewportManager,
+    levelGenerator: LevelGenerator
   ) {
     this.p = p;
     this.gameState = gameState;
     this.audioManager = audioManager;
     this.viewport = viewport;
+    this.levelGenerator = levelGenerator;
   }
 
   public updateAllMovement(): void {
     this.moveCar();
     this.moveEnemies();
+    this.moveRivals();
     this.moveBoats();
+
+    // Update rival spawning timing
+    this.levelGenerator.updateRivalSpawning();
   }
 
   public moveCar(): void {
@@ -82,6 +90,23 @@ export class MovementManager {
       // Handle enemies moving left (negative speed)
       else if (enemy.speed < 0 && enemy.x < -150) {
         enemy.x = this.viewport.logicalWidth + 100;
+      }
+    }
+  }
+
+  public moveRivals(): void {
+    for (let rival of this.gameState.rivals) {
+      // Rivals ignore collisions and move straight to parking spot
+      rival.x += rival.speed;
+
+      // Check if rival has reached the parking spot
+      if (!rival.hasReachedSpot && rival.x >= rival.targetX) {
+        rival.hasReachedSpot = true;
+        console.log(`💀 RIVAL REACHED PARKING SPOT! Game Over!`);
+
+        // End the game - rival took the spot
+        this.gameState.gameOver = true;
+        this.gameState.win = false;
       }
     }
   }

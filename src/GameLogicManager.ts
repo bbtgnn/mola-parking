@@ -135,6 +135,7 @@ export class GameLogicManager {
     this.renderer.drawParkingSpot();
     this.renderer.drawObstacles();
     this.renderer.drawEnemies();
+    this.renderer.drawRivals();
     this.renderer.drawBoats();
     this.renderer.drawCar();
     this.renderer.drawUI();

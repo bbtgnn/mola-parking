@@ -54,41 +54,51 @@ export class Renderer {
     this.p.fill(255, 255, 0);
     this.p.noStroke();
     this.p.textAlign(this.p.CENTER);
-    this.p.textSize(60);
 
-    this.p.text(
-      "MOL-E-STO",
-      this.viewport.logicalWidth / 2,
-      this.viewport.logicalHeight / 2 - 150
-    );
+    let y = 100;
+    let gap = 40;
+    // this.viewport.logicalHeight / 2 - 150
 
+    let titleSize = 60;
+    y += titleSize;
+    this.p.textSize(titleSize);
+    this.p.text("MOL-E-STO", this.viewport.logicalWidth / 2, y);
+
+    let subtitleSize = 24;
+    y += subtitleSize;
+    this.p.textSize(subtitleSize);
     this.p.fill(0, 255, 0);
-    this.p.noStroke();
-    this.p.textSize(24);
     this.p.text(
       "Il diritto al posto negato",
       this.viewport.logicalWidth / 2,
-      this.viewport.logicalHeight / 2 - 100
+      y
     );
 
-    this.p.textSize(15);
+    y += gap;
+
+    const rules = [
+      "REGOLE DEL GIOCO",
+      "OBBIETTIVO: Parcheggia nel posto GIALLO",
+      "Evita i parcheggi ROSSI (sono finti!)",
+      "Schiva barche e auto nemiche",
+      "Usa le frecce per muoverti",
+      "SOLO CHI VINCE PUO DECIDERE!",
+    ];
+    let rulesFontSize = 22;
+    let rulesLeading = 36;
+    y += rulesLeading;
+    this.p.textSize(rulesFontSize);
     this.p.fill(255, 255, 0);
-    const rulesText =
-      "REGOLE DEL GIOCO\n" +
-      "-\n" +
-      "OBBIETTIVO: Parcheggia nel posto GIALLO\n" +
-      "Evita i parcheggi ROSSI (sono finti!)\n" +
-      "Schiva barche e auto nemiche\n" +
-      "Usa le frecce per muoverti\n" +
-      "SOLO CHI VINCE PUO DECIDERE!";
-    this.p.text(
-      rulesText,
-      this.viewport.logicalWidth / 2,
-      this.viewport.logicalHeight / 2 - 50
-    );
+    this.p.textLeading(rulesLeading);
+    this.p.text(rules.join("\n"), this.viewport.logicalWidth / 2, y);
 
-    // Draw the text input if UI is active
+    let rulesHeight = rules.length * rulesLeading;
+    y += rulesHeight + gap;
+
+    this.p.push();
+    this.p.translate(0, y);
     this.uiManager.drawTextInput();
+    this.p.pop();
   }
 
   public drawCastle(): void {
@@ -206,6 +216,22 @@ export class Renderer {
     }
   }
 
+  public drawRivals(): void {
+    for (let rival of this.gameState.rivals) {
+      // Draw rival with special visual indication
+      this.drawPixelCar(rival, true);
+
+      // Add a warning indicator above the rival
+      this.p.push();
+      this.p.fill(255, 255, 0); // Yellow warning
+      this.p.noStroke();
+      this.p.textAlign(this.p.CENTER, this.p.CENTER);
+      this.p.textSize(16);
+      this.p.text("⚠️", rival.x, rival.y - 30);
+      this.p.pop();
+    }
+  }
+
   public drawObstacles(): void {
     for (let obs of this.gameState.obstacles) {
       if (obs.type === "palm") this.drawPalm(obs.x, obs.y);
@@ -306,6 +332,8 @@ export class Renderer {
     );
     yPos += lineHeight;
     this.p.text(`Enemies: ${this.gameState.enemies.length}`, 20, yPos);
+    yPos += lineHeight;
+    this.p.text(`Rivals: ${this.gameState.rivals.length}`, 20, yPos);
     yPos += lineHeight;
     this.p.text(`Boats: ${this.gameState.boats.length}`, 20, yPos);
     yPos += lineHeight;

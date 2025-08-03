@@ -1,5 +1,5 @@
 import type p5 from "p5";
-import type { ParkingSpot, Obstacle, Boat } from "./types";
+import type { ParkingSpot, Obstacle, Boat, Rival } from "./types";
 import { GameStateManager } from "./GameState";
 import { DifficultyManager } from "./DifficultyManager";
 
@@ -20,6 +20,10 @@ export class LevelGenerator {
   private readonly MIN_Y = this.TOOLBAR_HEIGHT + this.AREA_MARGIN;
   private readonly MAX_Y = 700;
 
+  // Rival spawning system
+  private rivalSpawnTime: number = 0; // When to spawn the next rival
+  private levelStartTime: number = 0; // When the level started
+
   constructor(p: p5, gameState: GameStateManager) {
     this.p = p;
     this.gameState = gameState;
@@ -35,6 +39,19 @@ export class LevelGenerator {
 
     // Generate parking spot first (needed for collision detection)
     this.gameState.parkingSpot = this.generateParkingSpot(level);
+
+    // Set up rival spawning timing
+    this.levelStartTime = this.p.millis();
+    if (level >= 3) {
+      // Rivals start appearing from level 3
+      // Spawn rival after delay - early levels = very fast spawning, late levels = longer delay
+      const baseDelay = 1500; // 1.5 seconds base delay (early levels - very quick!)
+      const levelIncrease = (level - 3) * 800; // Add 0.8 seconds per level after 3
+      const rivalDelay = Math.min(8000, baseDelay + levelIncrease); // Maximum 8 seconds
+      this.rivalSpawnTime = this.levelStartTime + rivalDelay;
+    } else {
+      this.rivalSpawnTime = 0; // No rivals in early levels
+    }
 
     // Generate fake parking spots (with overlap detection)
     this.generateFakeParkingSpots(level);
@@ -55,6 +72,7 @@ export class LevelGenerator {
     }
 
     // Generate enemies (with difficulty-driven count, speed, and direction)
+    // Avoid spawning at parking spot Y coordinate
     for (let i = 0; i < difficulty.enemies; i++) {
       this.gameState.enemies.push(this.generateEnemy(i, difficulty));
     }
@@ -359,9 +377,29 @@ export class LevelGenerator {
       speed = difficulty.enemySpeed; // Move right (positive speed)
     }
 
+    // Generate Y position avoiding parking spot area
+    let enemyY: number;
+    let attempts = 0;
+    const maxAttempts = 20;
+
+    do {
+      enemyY = this.p.random(this.MIN_Y, this.MAX_Y);
+      attempts++;
+
+      // Check if enemy Y would be too close to parking spot Y
+      if (this.gameState.parkingSpot) {
+        const parkingY = this.gameState.parkingSpot.y;
+        const minDistance = 60; // Minimum distance from parking spot Y
+        if (Math.abs(enemyY - parkingY) < minDistance) {
+          continue; // Try another Y position
+        }
+      }
+      break; // Y position is good
+    } while (attempts < maxAttempts);
+
     return {
       x: startX,
-      y: this.p.random(this.MIN_Y, this.MAX_Y), // Use full available height
+      y: enemyY,
       w: 48,
       h: 24,
       speed: speed,
@@ -457,5 +495,54 @@ export class LevelGenerator {
       speed: 2.5,
       angle: 0,
     };
+  }
+
+  /**
+   * Update rival spawning - call this from game loop
+   */
+  public updateRivalSpawning(): void {
+    const currentTime = this.p.millis();
+
+    // Check if it's time to spawn a rival and we haven't spawned one yet
+    if (
+      this.rivalSpawnTime > 0 &&
+      currentTime >= this.rivalSpawnTime &&
+      this.gameState.rivals.length === 0 &&
+      this.gameState.parkingSpot
+    ) {
+      this.spawnRival();
+      this.rivalSpawnTime = 0; // Prevent multiple spawns
+    }
+  }
+
+  /**
+   * Spawn a rival that races to the parking spot
+   */
+  private spawnRival(): void {
+    if (!this.gameState.parkingSpot) return;
+
+    // Calculate rival speed based on level (much faster and more aggressive)
+    const baseSpeed = 2.0; // Start much faster
+    const levelSpeedBonus = (this.gameState.level - 3) * 0.25; // Bigger speed increases
+    const rivalSpeed = baseSpeed + levelSpeedBonus;
+
+    const rival: Rival = {
+      x: 0, // Spawn at x = 0 (left edge)
+      y: this.gameState.parkingSpot.y, // Same Y as parking spot
+      w: 48,
+      h: 24,
+      speed: rivalSpeed,
+      col: this.p.color(255, 165, 0), // Orange - distinct from regular enemies
+      targetX: this.gameState.parkingSpot.x,
+      hasReachedSpot: false,
+    };
+
+    this.gameState.rivals.push(rival);
+
+    console.log(
+      `🏁 RIVAL SPAWNED! Level ${
+        this.gameState.level
+      } - Racing to parking spot at ${rivalSpeed.toFixed(1)}x speed!`
+    );
   }
 }

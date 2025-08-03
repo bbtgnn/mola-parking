@@ -4,6 +4,7 @@ import type {
   Obstacle,
   Boat,
   Enemy,
+  Rival,
   FakeParkingSpot,
   GameState,
 } from "./types";
@@ -16,6 +17,7 @@ export class GameStateManager {
   public obstacles: Obstacle[] = [];
   public boats: Boat[] = [];
   public enemies: Enemy[] = [];
+  public rivals: Rival[] = [];
   public fakeParkingSpots: FakeParkingSpot[] = [];
 
   // Game state
@@ -31,6 +33,7 @@ export class GameStateManager {
     this.boats = [];
     this.fakeParkingSpots = [];
     this.enemies = [];
+    this.rivals = [];
     this.gameOver = false;
     this.win = false;
   }

@@ -45,6 +45,17 @@ export interface Enemy {
   col: p5.Color;
 }
 
+export interface Rival {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  speed: number;
+  col: p5.Color;
+  targetX: number; // X position of parking spot (target)
+  hasReachedSpot: boolean; // Track if rival has reached the parking spot
+}
+
 export interface FakeParkingSpot {
   x: number;
   y: number;

@@ -45,7 +45,8 @@ export class Game {
       p,
       this.gameState,
       this.audioManager,
-      this.viewport
+      this.viewport,
+      this.levelGenerator
     );
     this.collisionManager = new CollisionManager(
       p,
