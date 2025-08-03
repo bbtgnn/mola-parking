@@ -38,6 +38,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Debug environment
+        run: |
+          echo "Repository name: ${{ github.event.repository.name }}"
+          echo "BASE_PATH will be: /${{ github.event.repository.name }}"
+          echo "NODE_ENV: production"
+
       - name: Build project
         run: npm run build
         env:

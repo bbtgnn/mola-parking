@@ -99,12 +99,14 @@ export class Game {
   }
 
   public preload(): void {
-    // Load the Monaco font from the public folder
-    this.font = this.p.loadFont("/PressStart2P-vaV7.ttf");
+    // Load the Monaco font from the public folder - use Vite's base URL for correct path
+    this.font = this.p.loadFont(
+      `${import.meta.env.BASE_URL}PressStart2P-vaV7.ttf`
+    );
 
     // Load the castle sprite - try PNG first as SVG can be problematic
     this.p.loadImage(
-      "/sprites/castle.png",
+      `${import.meta.env.BASE_URL}sprites/castle.png`,
       (img) => {
         // Success callback - PNG image loaded successfully
         console.log("✅ Castle PNG image loaded successfully:", img);
@@ -114,7 +116,7 @@ export class Game {
         console.warn("⚠️ PNG failed, trying SVG:", err);
         // Fallback to SVG if PNG doesn't exist
         this.p.loadImage(
-          "/sprites/castle.svg",
+          `${import.meta.env.BASE_URL}sprites/castle.svg`,
           (img) => {
             // Success callback - SVG image loaded successfully
             console.log("✅ Castle SVG image loaded successfully:", img);
