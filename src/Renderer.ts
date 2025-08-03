@@ -65,7 +65,7 @@ export class Renderer {
     this.p.text("MOL-E-STO", this.viewport.logicalWidth / 2, y);
 
     let subtitleSize = 24;
-    y += subtitleSize;
+    y += subtitleSize + 10;
     this.p.textSize(subtitleSize);
     this.p.fill(0, 255, 0);
     this.p.text(
