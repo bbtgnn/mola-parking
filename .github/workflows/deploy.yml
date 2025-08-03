@@ -41,8 +41,9 @@ jobs:
       - name: Build project
         run: npm run build
         env:
-          # Set the base path for GitHub Pages (replace 'mola-parking' with your actual repo name if different)
+          # Set the base path for GitHub Pages deployment
           NODE_ENV: production
+          BASE_PATH: "/${{ github.event.repository.name }}"
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
