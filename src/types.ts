@@ -56,6 +56,45 @@ export interface FakeParkingSpot {
 // Game state types
 export type GameState = "menu" | "playing";
 
+// Difficulty configuration types
+export interface DifficultyBase {
+  obstacles: number;
+  enemies: number;
+  safeAreaPadding: number;
+  enemySpeed: number;
+  enemyDirectionRandom: boolean;
+}
+
+export interface DifficultyScaling {
+  obstacleGrowth: number; // Obstacles added per level
+  enemyGrowth: number; // Enemies added per level
+  paddingReduction: number; // Safe area reduction per level
+  speedIncrease: number; // Enemy speed increase per level
+  randomDirectionLevel: number; // Level where direction randomization starts
+}
+
+export interface DifficultyOverride {
+  obstacles?: number;
+  enemies?: number;
+  safeAreaPadding?: number;
+  enemySpeed?: number;
+  enemyDirectionRandom?: boolean;
+}
+
+export interface DifficultyConfig {
+  base: DifficultyBase;
+  scaling: DifficultyScaling;
+  overrides: Record<number, DifficultyOverride>; // Level number -> overrides
+}
+
+export interface LevelDifficulty {
+  obstacles: number;
+  enemies: number;
+  safeAreaPadding: number;
+  enemySpeed: number;
+  enemyDirectionRandom: boolean;
+}
+
 // Audio types
 export interface AudioNodes {
   audioContext: AudioContext;

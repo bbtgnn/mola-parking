@@ -1,10 +1,12 @@
 import type p5 from "p5";
 import type { ParkingSpot, Obstacle, Boat } from "./types";
 import { GameStateManager } from "./GameState";
+import { DifficultyManager } from "./DifficultyManager";
 
 export class LevelGenerator {
   private p: p5;
   private gameState: GameStateManager;
+  private difficultyManager: DifficultyManager;
 
   // Car starting position constants
   private readonly CAR_START_X = 120;
@@ -21,11 +23,15 @@ export class LevelGenerator {
   constructor(p: p5, gameState: GameStateManager) {
     this.p = p;
     this.gameState = gameState;
+    this.difficultyManager = new DifficultyManager();
   }
 
   public generateLevel(level: number): void {
     // Reset level state
     this.gameState.resetLevel();
+
+    // Calculate difficulty for this level
+    const difficulty = this.difficultyManager.calculateDifficulty(level);
 
     // Generate parking spot first (needed for collision detection)
     this.gameState.parkingSpot = this.generateParkingSpot(level);
@@ -33,9 +39,11 @@ export class LevelGenerator {
     // Generate fake parking spots (with overlap detection)
     this.generateFakeParkingSpots(level);
 
-    // Generate obstacles (with collision detection to prevent overlapping)
-    for (let i = 0; i < 8 + level; i++) {
-      this.gameState.obstacles.push(this.generateObstacle(i));
+    // Generate obstacles (with difficulty-driven count and collision detection)
+    for (let i = 0; i < difficulty.obstacles; i++) {
+      this.gameState.obstacles.push(
+        this.generateObstacle(i, difficulty.safeAreaPadding)
+      );
     }
 
     // Generate boats
@@ -43,16 +51,9 @@ export class LevelGenerator {
       this.gameState.boats.push(this.generateBoat());
     }
 
-    // Generate enemies (spread across full game area)
-    for (let i = 0; i < 2; i++) {
-      this.gameState.enemies.push({
-        x: -150 * (i + 1),
-        y: this.p.random(this.MIN_Y, this.MAX_Y), // Use full available height
-        w: 48,
-        h: 24,
-        speed: 1.2 + level * 0.1,
-        col: this.p.color(255, 50, 50),
-      });
+    // Generate enemies (with difficulty-driven count, speed, and direction)
+    for (let i = 0; i < difficulty.enemies; i++) {
+      this.gameState.enemies.push(this.generateEnemy(i, difficulty));
     }
   }
 
@@ -140,7 +141,7 @@ export class LevelGenerator {
     }
   }
 
-  private generateObstacle(index: number): Obstacle {
+  private generateObstacle(index: number, safeAreaPadding: number): Obstacle {
     const obstacleTypes: Array<"palm" | "lamp" | "car"> = [
       "palm",
       "lamp",
@@ -189,7 +190,10 @@ export class LevelGenerator {
           break;
       }
       attempts++;
-    } while (this.checkObstacleOverlap(x, y, w, h) && attempts < maxAttempts);
+    } while (
+      this.checkObstacleOverlap(x, y, w, h, safeAreaPadding) &&
+      attempts < maxAttempts
+    );
 
     return {
       x: x,
@@ -206,7 +210,8 @@ export class LevelGenerator {
     x: number,
     y: number,
     w: number,
-    h: number
+    h: number,
+    safeAreaPadding: number
   ): boolean {
     // Check overlap with parking spot
     if (this.gameState.parkingSpot) {
@@ -220,7 +225,8 @@ export class LevelGenerator {
           parkingSpot.x,
           parkingSpot.y,
           parkingSpot.w,
-          parkingSpot.h
+          parkingSpot.h,
+          safeAreaPadding
         )
       ) {
         return true;
@@ -238,7 +244,8 @@ export class LevelGenerator {
           obstacle.x,
           obstacle.y,
           obstacle.w,
-          obstacle.h
+          obstacle.h,
+          safeAreaPadding
         )
       ) {
         return true;
@@ -256,7 +263,8 @@ export class LevelGenerator {
           fakeSpot.x,
           fakeSpot.y,
           fakeSpot.w,
-          fakeSpot.h
+          fakeSpot.h,
+          safeAreaPadding
         )
       ) {
         return true;
@@ -273,7 +281,8 @@ export class LevelGenerator {
         this.CAR_START_X,
         this.CAR_START_Y,
         this.CAR_START_W,
-        this.CAR_START_H
+        this.CAR_START_H,
+        safeAreaPadding
       )
     ) {
       return true;
@@ -291,11 +300,9 @@ export class LevelGenerator {
     x2: number,
     y2: number,
     w2: number,
-    h2: number
+    h2: number,
+    padding: number = 15
   ): boolean {
-    // Add some padding to ensure proper spacing
-    const padding = 15;
-
     const left1 = x1 - w1 / 2 - padding;
     const right1 = x1 + w1 / 2 + padding;
     const top1 = y1 - h1 / 2 - padding;
@@ -312,6 +319,51 @@ export class LevelGenerator {
       bottom1 < top2 ||
       top1 > bottom2
     );
+  }
+
+  private generateEnemy(
+    index: number,
+    difficulty: {
+      enemies: number;
+      enemySpeed: number;
+      enemyDirectionRandom: boolean;
+    }
+  ): {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    speed: number;
+    col: p5.Color;
+  } {
+    // Determine starting side and direction based on difficulty settings
+    let startX: number;
+    let speed: number;
+
+    if (difficulty.enemyDirectionRandom) {
+      // Randomly choose left or right side
+      const startFromLeft = this.p.random() < 0.5;
+      if (startFromLeft) {
+        startX = -150 * (index + 1); // Start from left (negative X)
+        speed = difficulty.enemySpeed; // Move right (positive speed)
+      } else {
+        startX = 1050 + 150 * index; // Start from right (beyond screen width)
+        speed = -difficulty.enemySpeed; // Move left (negative speed)
+      }
+    } else {
+      // Always start from left (original behavior)
+      startX = -150 * (index + 1);
+      speed = difficulty.enemySpeed; // Move right (positive speed)
+    }
+
+    return {
+      x: startX,
+      y: this.p.random(this.MIN_Y, this.MAX_Y), // Use full available height
+      w: 48,
+      h: 24,
+      speed: speed,
+      col: this.p.color(255, 50, 50),
+    };
   }
 
   private generateBoat(): Boat {

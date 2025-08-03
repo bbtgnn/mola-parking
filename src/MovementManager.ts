@@ -74,8 +74,14 @@ export class MovementManager {
   public moveEnemies(): void {
     for (let enemy of this.gameState.enemies) {
       enemy.x += enemy.speed;
-      if (enemy.x > this.viewport.logicalWidth + 100) {
+
+      // Handle enemies moving right (positive speed)
+      if (enemy.speed > 0 && enemy.x > this.viewport.logicalWidth + 100) {
         enemy.x = -150;
+      }
+      // Handle enemies moving left (negative speed)
+      else if (enemy.speed < 0 && enemy.x < -150) {
+        enemy.x = this.viewport.logicalWidth + 100;
       }
     }
   }
